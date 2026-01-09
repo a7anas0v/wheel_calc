@@ -8,7 +8,7 @@ st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="ce
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 
-# --- 3. РЕЧНИК С ПРЕВОДИ ---
+# --- 3. РЕЧНИК С ПРЕВОДИ (ОПТИМИЗИРАН ЗА МОБИЛНИ УСТРОЙСТВА) ---
 texts = {
     'BG': {
         'title': "Wheel Strategy Calculator",
@@ -29,18 +29,18 @@ texts = {
         'put_header': "Анализ на Cash Secured Put",
         'collateral': "Капитал в риск (Collateral)",
         'breakeven': "Цена на нулата (Break-Even)",
-        'buffer': "Буфер от текущата цена",
+        'buffer': "Буфер (Discount)", # По-кратко
         'return_flat': "Възвращаемост (Flat)",
-        'return_annual': "Годишна доходност (Annualized)",
+        'return_annual': "Годишна (Annualized)", # По-кратко
         'safety_msg': "Колко може да падне акцията, преди да сте на загуба.",
         'danger_msg': "⚠️ Внимание: Текущата цена вече е под вашата Break-Even точка!",
         # CALL Метрики
         'call_header': "Анализ на Covered Call",
-        'cost_basis': "Вашата средна цена (Net Cost Basis) ($)",
-        'cap_gains': "Печалба от акциите (ако ви ги вземат)",
+        'cost_basis': "Средна цена (Cost Basis) ($)", # По-кратко
+        'cap_gains': "Капиталова Печалба ($)", # По-кратко, за да не се реже
         'total_profit': "ОБЩА потенциална печалба",
-        'total_return': "Обща възвращаемост % (Ако ви 'асайнат')",
-        'prem_return': "Доходност само от премията",
+        'total_return': "Общ ROI (Total Return)", # По-кратко
+        'prem_return': "Доход от Премия", # По-кратко
         # Rolling
         'roll_header': "Калкулатор за Ролване",
         'old_strike': "Стар Страйк ($)",
@@ -77,18 +77,18 @@ texts = {
         'put_header': "Cash Secured Put Analysis",
         'collateral': "Capital at Risk (Collateral)",
         'breakeven': "Break-Even Price",
-        'buffer': "Discount / Safety Buffer",
-        'return_flat': "Return on Risk (Flat)",
+        'buffer': "Discount / Buffer",
+        'return_flat': "Return (Flat)",
         'return_annual': "Annualized ROI",
         'safety_msg': "How much the stock can drop before you lose money.",
         'danger_msg': "⚠️ Warning: Current price is already below your Break-Even point!",
         # CALL Metrics
         'call_header': "Covered Call Analysis",
-        'cost_basis': "Your Net Cost Basis ($)",
-        'cap_gains': "Capital Gains (if called away)",
+        'cost_basis': "Net Cost Basis ($)",
+        'cap_gains': "Capital Gains ($)",
         'total_profit': "TOTAL Potential Profit",
-        'total_return': "Total Return % (if assigned)",
-        'prem_return': "Premium Return (Flat)",
+        'total_return': "Total Return %",
+        'prem_return': "Premium Return",
         # Rolling
         'roll_header': "Rolling Calculator",
         'old_strike': "Old Strike ($)",
@@ -145,7 +145,6 @@ with tab1:
         
     with col2:
         prem_input = st.number_input(t['premium'], value=None, step=0.01, placeholder="0.00")
-        # Контрактите е по-добре да са 1 по подразбиране
         contracts = st.number_input(t['contracts'], value=1, step=1)
         
         premium = prem_input if prem_input is not None else 0.0
@@ -221,15 +220,23 @@ with tab2:
         st.warning(t['warning_today'])
 
     if strike_call > 0 and cost_basis > 0 and days_call > 0:
+        # 1. Печалба от премия
         flat_prem_return = (premium_call / cost_basis) * 100
         ann_prem_return = (flat_prem_return / days_call) * 365
         
+        # 2. Капиталова печалба (Capital Gains)
         cap_gains_per_share = strike_call - cost_basis
+        # --- НОВО: Процент на капиталовата печалба ---
+        cap_gains_pct = (cap_gains_per_share / cost_basis) * 100
+        
+        # 3. Обща печалба
         total_profit_per_share = premium_call + cap_gains_per_share
         
+        # Суми в долари
         total_profit_usd = total_profit_per_share * 100 * contracts_call
         cap_gains_usd = cap_gains_per_share * 100 * contracts_call
         
+        # 4. Обща възвращаемост
         total_return_pct = (total_profit_per_share / cost_basis) * 100
         
         st.write("---")
@@ -237,9 +244,18 @@ with tab2:
         st.success(f"🚀 **{t['total_profit']}: ${total_profit_usd:,.2f}**")
         
         c1, c2, c3 = st.columns(3)
-        c1.metric(t['prem_return'], f"{flat_prem_return:.2f}%", f"{ann_prem_return:.1f}% Ann.")
-        c2.metric(t['cap_gains'], f"${cap_gains_usd:,.2f}")
         
+        # Колона 1: Премия
+        c1.metric(t['prem_return'], f"{flat_prem_return:.2f}%", f"{ann_prem_return:.1f}% Ann.")
+        
+        # Колона 2: Капиталова печалба (Добавихме процента в delta)
+        c2.metric(
+            label=t['cap_gains'], 
+            value=f"${cap_gains_usd:,.2f}", 
+            delta=f"{cap_gains_pct:.2f}%" # Тук се показва процента ръст от cost basis
+        )
+        
+        # Колона 3: Общ ROI
         c3.metric(
             label=t['total_return'], 
             value=f"{total_return_pct:.2f}%",

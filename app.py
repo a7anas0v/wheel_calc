@@ -1,12 +1,18 @@
 import streamlit as st
 from datetime import date
+import yfinance as yf
+import pandas as pd
 
 # --- 1. КОНФИГУРАЦИЯ ---
-st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="centered")
+st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="wide")
 
 # --- 2. УПРАВЛЕНИЕ НА ЕЗИКА ---
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
+
+# Initialize session state values if not present
+if 'fetched_price' not in st.session_state:
+    st.session_state.fetched_price = None
 
 # --- 3. РЕЧНИК С ПРЕВОДИ ---
 texts = {
@@ -17,7 +23,16 @@ texts = {
         'tab_put': "🟢 1. Продажба на PUT (Вход)",
         'tab_call': "🔴 2. Продажба на CALL (Изход)",
         'tab_roll': "🔄 3. Ролване (Сценарии)",
-        # Общи
+        # Sidebar Data
+        'sb_title': "📡 Пазарни Данни (Live)",
+        'sb_input': "Търси Тикер (напр. TSLA):",
+        'sb_btn': "Търси",
+        'sb_price': "Текуща Цена:",
+        'sb_copy': "Използвай тази цена 👇",
+        'sb_chain': "Верига Опции (Option Chain)",
+        'sb_exp': "Избери Падеж:",
+        'sb_type': "Тип:",
+        # General
         'current_price': "Текуща цена на акцията ($)",
         'strike': "Страйк Цена ($)",
         'premium': "Премия на акция ($)",
@@ -82,6 +97,15 @@ texts = {
         'tab_put': "🟢 1. Sell PUT (Entry)",
         'tab_call': "🔴 2. Sell CALL (Exit)",
         'tab_roll': "🔄 3. Rolling Logic",
+        # Sidebar
+        'sb_title': "📡 Market Data (Live)",
+        'sb_input': "Search Ticker (e.g. TSLA):",
+        'sb_btn': "Search",
+        'sb_price': "Current Price:",
+        'sb_copy': "Use this price 👇",
+        'sb_chain': "Option Chain Viewer",
+        'sb_exp': "Select Expiry:",
+        'sb_type': "Type:",
         # General
         'current_price': "Current Stock Price ($)",
         'strike': "Strike Price ($)",
@@ -152,21 +176,72 @@ with col_lang:
 
 t = texts[st.session_state.language]
 
+# --- 5. SIDEBAR: LIVE DATA ---
+with st.sidebar:
+    st.header(t['sb_title'])
+    ticker_symbol = st.text_input(t['sb_input'], value="").upper()
+    
+    selected_price = None
+    
+    if ticker_symbol:
+        try:
+            stock = yf.Ticker(ticker_symbol)
+            # Взимаме 'regularMarketPrice' или 'currentPrice'
+            info = stock.info
+            current_live_price = info.get('regularMarketPrice', info.get('currentPrice', None))
+            
+            if current_live_price:
+                st.metric(t['sb_price'], f"${current_live_price:.2f}")
+                
+                # Бутон за използване на цената
+                if st.button(t['sb_copy']):
+                    st.session_state.fetched_price = current_live_price
+                    st.success("Copied!")
+                
+                st.divider()
+                st.subheader(t['sb_chain'])
+                
+                # Expirations
+                expirations = stock.options
+                if expirations:
+                    sel_exp = st.selectbox(t['sb_exp'], expirations)
+                    opt_type = st.radio(t['sb_type'], ["Put", "Call"], horizontal=True)
+                    
+                    if sel_exp:
+                        opt_chain = stock.option_chain(sel_exp)
+                        data = opt_chain.puts if opt_type == "Put" else opt_chain.calls
+                        
+                        # Показваме таблица с данни: Strike, Last Price, Bid, Ask
+                        df_show = data[['strike', 'lastPrice', 'bid', 'ask', 'volume']]
+                        st.dataframe(df_show, hide_index=True, use_container_width=True)
+                else:
+                    st.info("No options data found.")
+                    
+            else:
+                st.warning("Price not available.")
+                
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+# --- MAIN CONTENT ---
+
 with col_header:
     st.title(t['title'])
 st.caption(t['subtitle'])
 
 today = date.today()
 
-# --- 5. ГЛАВНО МЕНЮ (Вертикално за мобилни) ---
 st.write("---")
-# Използваме Radio бутони вместо Tabs, за да са една под друга на телефон
+# Използваме Radio бутони вместо Tabs
 selected_section = st.radio(
     t['choose_strat'],
     [t['tab_put'], t['tab_call'], t['tab_roll']],
     index=0
 )
 st.write("---")
+
+# Helper value for inputs (if fetched from sidebar)
+val_price = st.session_state.fetched_price
 
 # ==========================================
 # SECTION 1: SELLING PUT
@@ -175,8 +250,12 @@ if selected_section == t['tab_put']:
     st.header(t['put_header'])
     col1, col2 = st.columns(2)
     with col1:
-        cp_input = st.number_input(t['current_price'], value=None, step=0.10, placeholder="0.00")
+        # Използваме val_price ако има такъв
+        def_val = val_price if val_price else None
+        
+        cp_input = st.number_input(t['current_price'], value=def_val, step=0.10, placeholder="0.00")
         strike_input = st.number_input(t['strike'], value=None, step=0.5, placeholder="0.00")
+        
         current_price = cp_input if cp_input is not None else 0.0
         strike = strike_input if strike_input is not None else 0.0
     with col2:

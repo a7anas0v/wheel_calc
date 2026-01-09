@@ -77,11 +77,11 @@ schema = {
 # --- API Call ---
 @st.cache_data(ttl=900)
 def fetch_stock_news(ticker: str):
-    # ИЗПОЛЗВАМЕ STABLE МОДЕЛ
+    # ТУК Е ПРОМЯНАТА: Ползваме 'google_search_retrieval' вместо старото име
     model = genai.GenerativeModel(
         model_name="gemini-1.5-flash", 
         generation_config={"response_mime_type": "application/json", "response_schema": schema},
-        tools=[{"google_search": {}}]
+        tools=[{"google_search_retrieval": {}}] 
     )
     
     prompt = f"""

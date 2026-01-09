@@ -383,7 +383,7 @@ st.write("---")
 st.markdown(
     """
     <div style='text-align: center; color: grey;'>
-        <small>Powered by <b>AIVAN Solutions</b> | © 2026 VibeSpaces</small>
+        <small>Powered by <b>AIVAN Solutions</b> | © 2026 Aivan Capital</small>
     </div>
     """, 
     unsafe_allow_html=True

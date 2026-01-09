@@ -1,5 +1,7 @@
 import streamlit as st
 from datetime import date
+import yfinance as yf
+import pandas as pd
 
 # --- 1. КОНФИГУРАЦИЯ ---
 st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="centered")
@@ -8,16 +10,33 @@ st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="ce
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 
+# Initialize session state values if not present
+if 'fetched_price' not in st.session_state:
+    st.session_state.fetched_price = None
+
 # --- 3. РЕЧНИК С ПРЕВОДИ ---
 texts = {
     'BG': {
         'title': "Wheel Strategy Calculator",
         'subtitle': "Професионален анализ на опции и риск",
-        'choose_strat': "📂 Изберете Стратегия:",
+        'choose_strat': "📂 Изберете Раздел:",
         'tab_put': "🟢 1. Продажба на PUT (Вход)",
         'tab_call': "🔴 2. Продажба на CALL (Изход)",
         'tab_roll': "🔄 3. Ролване (Сценарии)",
-        # Общи
+        'tab_data': "🔎 4. Пазарни Данни (Live)",
+        # Market Data Section
+        'md_header': "📡 Пазарни Данни & Верига Опции",
+        'md_input_lbl': "Въведете Тикер (Yahoo Finance Symbol):",
+        'md_note': "ℹ️ Бележка: Данните са с ~15 мин закъснение. Използват се тикери на Yahoo Finance.",
+        'md_note_ex': "Примери: 'TSLA', 'AAPL'. За канадски акции добавете '.TO' (напр. 'U-UN.TO').",
+        'md_price': "Текуща Цена:",
+        'md_btn_copy': "👉 Използвай тази цена в калкулатора",
+        'md_chain_head': "⛓️ Верига Опции (Option Chain)",
+        'md_exp': "Избери Падеж:",
+        'md_type': "Тип Опция:",
+        'md_no_data': "Няма намерени данни за опции или тикерът е грешен.",
+        'md_error': "Грешка при търсене. Проверете символа.",
+        # General
         'current_price': "Текуща цена на акцията ($)",
         'strike': "Страйк Цена ($)",
         'premium': "Премия на акция ($)",
@@ -47,7 +66,7 @@ texts = {
         'roll_strategy': "Стратегия:",
         'strat_call': "Covered CALL (Ролване нагоре)",
         'strat_put': "Cash Secured PUT (Ролване надолу)",
-        # Inputs
+        # Inputs & Analysis
         'orig_data': "📜 История на позицията",
         'orig_date': "Дата на отваряне (Start Date)",
         'orig_prem': "Първоначална премия ($)",
@@ -60,7 +79,6 @@ texts = {
         'roll_credit': "Credit (Взимам)",
         'roll_debit': "Debit (Плащам)",
         'new_expiry': "Нов Падеж",
-        # Analysis
         'an_comparison': "📊 Сравнение на Сценариите",
         'scen_base': "1️⃣ БАЗОВ: Не правите нищо",
         'scen_fail': "2️⃣ ЛОШ КЪСМЕТ (Failed Roll)",
@@ -78,10 +96,23 @@ texts = {
     'EN': {
         'title': "Wheel Strategy Calculator",
         'subtitle': "Professional Option & Risk Analysis",
-        'choose_strat': "📂 Select Strategy:",
+        'choose_strat': "📂 Select Section:",
         'tab_put': "🟢 1. Sell PUT (Entry)",
         'tab_call': "🔴 2. Sell CALL (Exit)",
         'tab_roll': "🔄 3. Rolling Logic",
+        'tab_data': "🔎 4. Market Data (Live)",
+        # Market Data
+        'md_header': "📡 Market Data & Option Chain",
+        'md_input_lbl': "Enter Ticker (Yahoo Finance Symbol):",
+        'md_note': "ℹ️ Note: Data is delayed by ~15 mins. Use Yahoo Finance tickers.",
+        'md_note_ex': "Examples: 'TSLA', 'AAPL'. For Canadian stocks try adding '.TO' (e.g. 'U-UN.TO').",
+        'md_price': "Current Price:",
+        'md_btn_copy': "👉 Use this price in calculator",
+        'md_chain_head': "⛓️ Option Chain",
+        'md_exp': "Select Expiry:",
+        'md_type': "Option Type:",
+        'md_no_data': "No option data found or invalid ticker.",
+        'md_error': "Error fetching data. Check symbol.",
         # General
         'current_price': "Current Stock Price ($)",
         'strike': "Strike Price ($)",
@@ -112,7 +143,7 @@ texts = {
         'roll_strategy': "Strategy:",
         'strat_call': "Covered CALL (Rolling UP)",
         'strat_put': "Cash Secured PUT (Rolling DOWN)",
-        # Inputs
+        # Inputs & Analysis
         'orig_data': "📜 Position History",
         'orig_date': "Original Open Date",
         'orig_prem': "Original Premium ($)",
@@ -125,7 +156,6 @@ texts = {
         'roll_credit': "Credit (Receive)",
         'roll_debit': "Debit (Pay)",
         'new_expiry': "New Expiry Date",
-        # Analysis
         'an_comparison': "📊 Scenario Comparison",
         'scen_base': "1️⃣ BASE: Do Nothing",
         'scen_fail': "2️⃣ BAD LUCK (Failed Roll)",
@@ -152,21 +182,24 @@ with col_lang:
 
 t = texts[st.session_state.language]
 
+# --- 5. MAIN CONTENT ---
 with col_header:
     st.title(t['title'])
 st.caption(t['subtitle'])
 
 today = date.today()
 
-# --- 5. ГЛАВНО МЕНЮ (Вертикално за мобилни) ---
 st.write("---")
-# Използваме Radio бутони вместо Tabs, за да са една под друга на телефон
+# ГЛАВНО МЕНЮ
 selected_section = st.radio(
     t['choose_strat'],
-    [t['tab_put'], t['tab_call'], t['tab_roll']],
+    [t['tab_put'], t['tab_call'], t['tab_roll'], t['tab_data']],
     index=0
 )
 st.write("---")
+
+# Helper value for inputs
+val_price = st.session_state.fetched_price
 
 # ==========================================
 # SECTION 1: SELLING PUT
@@ -175,8 +208,10 @@ if selected_section == t['tab_put']:
     st.header(t['put_header'])
     col1, col2 = st.columns(2)
     with col1:
-        cp_input = st.number_input(t['current_price'], value=None, step=0.10, placeholder="0.00")
+        def_val = val_price if val_price else None
+        cp_input = st.number_input(t['current_price'], value=def_val, step=0.10, placeholder="0.00")
         strike_input = st.number_input(t['strike'], value=None, step=0.5, placeholder="0.00")
+        
         current_price = cp_input if cp_input is not None else 0.0
         strike = strike_input if strike_input is not None else 0.0
     with col2:
@@ -260,18 +295,15 @@ elif selected_section == t['tab_call']:
             st.error(f"⚠️ Внимание: Страйкът (${strike_call}) е под вашата цена на купуване (${cost_basis}).")
 
 # ==========================================
-# SECTION 3: ROLLING (FULL SCENARIO ANALYSIS)
+# SECTION 3: ROLLING
 # ==========================================
 elif selected_section == t['tab_roll']:
     st.header(t['roll_header'])
     
-    # 1. Избор на стратегия
     roll_strat = st.radio(t['roll_strategy'], (t['strat_call'], t['strat_put']), horizontal=True)
     is_call = (roll_strat == t['strat_call'])
     
     st.divider()
-    
-    # === ВХОДНИ ДАННИ ===
     
     col_hist, col_new = st.columns(2)
     
@@ -297,24 +329,20 @@ elif selected_section == t['tab_roll']:
         rp_input = st.number_input(t['roll_cost_lbl'], value=None, step=0.01, placeholder="0.00")
         roll_price = rp_input if rp_input is not None else 0.0
 
-    # === ИЗЧИСЛЕНИЯ ===
     if old_strike > 0 and new_strike > 0 and orig_premium > 0:
         st.divider()
         st.subheader(t['an_comparison'])
         
-        # Дни
         days_base = (curr_expiry - orig_date).days
-        days_total = (new_expiry - orig_date).days # Целият цикъл
+        days_total = (new_expiry - orig_date).days
         
         if days_base <= 0: days_base = 1 
         if days_total <= 0: days_total = 1
         
-        # 1. SCENARIO BASE
         profit_base = orig_premium
         roi_base = (profit_base / old_strike) * 100
         ann_base = (roi_base / days_base) * 365
         
-        # 2. SCENARIO FAILED ROLL
         net_premium = 0.0
         if roll_type == t['roll_credit']:
             net_premium = orig_premium + roll_price
@@ -325,7 +353,6 @@ elif selected_section == t['tab_roll']:
         roi_fail = (profit_fail / old_strike) * 100 
         ann_fail = (roi_fail / days_total) * 365
         
-        # 3. SCENARIO SUCCESS
         strike_diff = 0.0
         if is_call:
              strike_diff = new_strike - old_strike
@@ -336,17 +363,14 @@ elif selected_section == t['tab_roll']:
         roi_win = (profit_win / old_strike) * 100
         ann_win = (roi_win / days_total) * 365
 
-        # === ВИЗУАЛИЗАЦИЯ (ТАБЛИЦА) ===
         col_s1, col_s2, col_s3 = st.columns(3)
         
-        # Базов сценарий
         with col_s1:
             st.info(t['scen_base'])
             st.metric(t['row_profit'], f"${profit_base:.2f}")
             st.metric(t['row_days'], f"{days_base} {t['days_count']}")
             st.metric(t['row_ann'], f"{ann_base:.2f}%")
             
-        # Лош сценарий (Fail)
         with col_s2:
             st.warning(t['scen_fail'])
             delta_val = None
@@ -359,7 +383,6 @@ elif selected_section == t['tab_roll']:
             ann_delta = f"{(ann_fail - ann_base):.2f}%"
             st.metric(t['row_ann'], f"{ann_fail:.2f}%", delta=ann_delta)
 
-        # Успешен сценарий (Win)
         with col_s3:
             st.success(t['scen_win'])
             st.metric(t['row_profit'], f"${profit_win:.2f}", delta=f"+${(profit_win - profit_fail):.2f}")
@@ -367,8 +390,6 @@ elif selected_section == t['tab_roll']:
             st.metric(t['row_ann'], f"{ann_win:.2f}%", delta=f"{(ann_win - ann_base):.2f}%")
 
         st.write("---")
-        
-        # === ИЗВОДИТЕ (VERDICT) ===
         st.subheader(t['risk_insight'])
         
         if ann_fail < ann_base:
@@ -385,6 +406,58 @@ elif selected_section == t['tab_roll']:
              st.error(t['verdict_bad'])
         else:
              st.info("⚠️ Сделката е неутрална/приемлива.")
+
+# ==========================================
+# SECTION 4: MARKET DATA (NEW MAIN TAB)
+# ==========================================
+elif selected_section == t['tab_data']:
+    st.header(t['md_header'])
+    
+    st.info(f"{t['md_note']}\n\n{t['md_note_ex']}")
+    
+    ticker_symbol = st.text_input(t['md_input_lbl'], value="").upper()
+    
+    if ticker_symbol:
+        try:
+            stock = yf.Ticker(ticker_symbol)
+            info = stock.info
+            # Опитваме се да хванем цена от различни полета
+            current_live_price = info.get('regularMarketPrice', info.get('currentPrice', None))
+            
+            if current_live_price:
+                st.metric(t['md_price'], f"${current_live_price:.2f}")
+                
+                # Бутон за копиране
+                if st.button(t['md_btn_copy']):
+                    st.session_state.fetched_price = current_live_price
+                    st.success("Цената е запазена! Отидете в таб 1 или 2, за да я видите.")
+                
+                st.divider()
+                st.subheader(t['md_chain_head'])
+                
+                expirations = stock.options
+                if expirations:
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        sel_exp = st.selectbox(t['md_exp'], expirations)
+                    with c2:
+                        opt_type = st.radio(t['md_type'], ["Put", "Call"], horizontal=True)
+                    
+                    if sel_exp:
+                        opt_chain = stock.option_chain(sel_exp)
+                        data = opt_chain.puts if opt_type == "Put" else opt_chain.calls
+                        
+                        # Форматиране на таблицата
+                        df_show = data[['strike', 'lastPrice', 'bid', 'ask', 'volume', 'openInterest']]
+                        st.dataframe(df_show, hide_index=True, use_container_width=True)
+                else:
+                    st.warning(t['md_no_data'])
+                    
+            else:
+                st.warning(f"Не мога да намеря цена за: {ticker_symbol}. Проверете дали тикерът е правилен в Yahoo Finance.")
+                
+        except Exception as e:
+            st.error(f"{t['md_error']} ({e})")
 
 # --- FOOTER ---
 st.write("---")

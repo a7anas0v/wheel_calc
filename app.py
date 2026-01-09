@@ -378,3 +378,13 @@ with tab3:
              st.error(t['verdict_bad'])
         else:
              st.info("⚠️ Сделката е неутрална/приемлива.")
+# --- FOOTER ---
+st.write("---")
+st.markdown(
+    """
+    <div style='text-align: center; color: grey;'>
+        <small>Powered by <b>AIVAN Solutions</b> | © 2026 VibeSpaces</small>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)

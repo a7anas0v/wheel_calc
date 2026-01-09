@@ -22,7 +22,8 @@ texts = {
         'premium': "Премия на акция ($)",
         'date_expiry': "Дата на падеж",
         'contracts': "Брой контракти",
-        'days_left': "Дни до падежа:",
+        'days_left': "Оставащи дни до падежа:",
+        'days_count': "дни",
         'warning_today': "⚠️ Изберете бъдеща дата!",
         # PUT Метрики
         'put_header': "Анализ на Cash Secured Put",
@@ -70,6 +71,7 @@ texts = {
         'date_expiry': "Expiration Date",
         'contracts': "Number of Contracts",
         'days_left': "Days to Expiration:",
+        'days_count': "days",
         'warning_today': "⚠️ Please select a future date!",
         # PUT Metrics
         'put_header': "Cash Secured Put Analysis",
@@ -122,7 +124,7 @@ st.caption(t['subtitle'])
 
 today = date.today()
 
-# --- 5. ТАБОВЕ (НОВОТО МЕНЮ) ---
+# --- 5. ТАБОВЕ ---
 tab1, tab2, tab3 = st.tabs([t['tab_put'], t['tab_call'], t['tab_roll']])
 
 # ==========================================
@@ -139,17 +141,23 @@ with tab1:
         premium = st.number_input(t['premium'], value=0.0, step=0.01, key="put_prem")
         contracts = st.number_input(t['contracts'], value=1, step=1, key="put_cont")
     
+    # Календар
     expiry_date = st.date_input(t['date_expiry'], min_value=today, value=today, key="put_date")
     days = (expiry_date - today).days
 
-    if days == 0:
+    # --- НОВО: ПОКАЗВАНЕ НА ДНИТЕ ВЕДНАГА ---
+    if days > 0:
+        st.caption(f"📅 {t['days_left']} **{days}** {t['days_count']}")
+    elif days == 0:
         st.warning(t['warning_today'])
-    elif strike > 0:
+    # ----------------------------------------
+
+    if strike > 0 and days > 0:
         # ИЗЧИСЛЕНИЯ
         collateral = strike * 100 * contracts
         breakeven = strike - premium
         
-        # Buffer % (Discount)
+        # Buffer %
         buffer_pct = 0.0
         if current_price > 0:
             buffer_pct = ((current_price - breakeven) / current_price) * 100
@@ -160,30 +168,25 @@ with tab1:
         
         st.write("---")
         
-        # Основен панел с резултати (Зелен)
+        # Резултати
         st.success(f"📊 **{t['return_annual']}: {ann_return:.2f}%**")
         
-        # Детайли в 3 колони
         c1, c2, c3 = st.columns(3)
         c1.metric(t['return_flat'], f"{flat_return:.2f}%")
         c2.metric(t['breakeven'], f"${breakeven:.2f}")
         
-        # --- ПРОМЯНАТА Е ТУК ---
-        # Използваме параметъра 'delta', за да оцветим автоматично.
-        # Ако е положително -> Зелено. Ако е отрицателно -> Червено.
+        # Оцветяване на буфера (Червено/Зелено)
         c3.metric(
             label=t['buffer'], 
             value=f"{buffer_pct:.2f}%", 
             delta=f"{buffer_pct:.2f}%" if current_price > 0 else None
         )
-        # -----------------------
         
         if buffer_pct < 0 and current_price > 0:
              st.error(t['danger_msg'])
         else:
              st.caption(f"🛡️ {t['safety_msg']}")
         
-        # Collateral Info
         st.info(f"💰 {t['collateral']}: **${collateral:,.0f}**")
 
 
@@ -195,8 +198,7 @@ with tab2:
     
     col1, col2 = st.columns(2)
     with col1:
-        # Тук е важното ново поле - Cost Basis
-        cost_basis = st.number_input(t['cost_basis'], value=0.0, step=0.10, help="Цената, на която сте купили акциите (или break-even от пута).")
+        cost_basis = st.number_input(t['cost_basis'], value=0.0, step=0.10, help="Цената, на която сте купили акциите.")
         strike_call = st.number_input(t['strike'], value=0.0, step=0.5, key="call_strike")
     with col2:
         premium_call = st.number_input(t['premium'], value=0.0, step=0.01, key="call_prem")
@@ -205,24 +207,24 @@ with tab2:
     expiry_date_call = st.date_input(t['date_expiry'], min_value=today, value=today, key="call_date")
     days_call = (expiry_date_call - today).days
 
-    if days_call == 0:
+    # --- НОВО: ПОКАЗВАНЕ НА ДНИТЕ ВЕДНАГА ---
+    if days_call > 0:
+        st.caption(f"📅 {t['days_left']} **{days_call}** {t['days_count']}")
+    elif days_call == 0:
         st.warning(t['warning_today'])
-    elif strike_call > 0 and cost_basis > 0:
+    # ----------------------------------------
+
+    if strike_call > 0 and cost_basis > 0 and days_call > 0:
         # ИЗЧИСЛЕНИЯ
-        
-        # 1. Печалба само от премията
         flat_prem_return = (premium_call / cost_basis) * 100
         ann_prem_return = (flat_prem_return / days_call) * 365
         
-        # 2. Печалба от ръст на акцията (Capital Gains)
         cap_gains_per_share = strike_call - cost_basis
         total_profit_per_share = premium_call + cap_gains_per_share
         
-        # Обща сума в долари
         total_profit_usd = total_profit_per_share * 100 * contracts_call
         cap_gains_usd = cap_gains_per_share * 100 * contracts_call
         
-        # 3. Обща възвращаемост (Total Return)
         total_return_pct = (total_profit_per_share / cost_basis) * 100
         
         st.write("---")
@@ -230,11 +232,9 @@ with tab2:
         st.success(f"🚀 **{t['total_profit']}: ${total_profit_usd:,.2f}**")
         
         c1, c2, c3 = st.columns(3)
-        # Показваме ROI на премията + годишна база
         c1.metric(t['prem_return'], f"{flat_prem_return:.2f}%", f"{ann_prem_return:.1f}% Ann.")
         c2.metric(t['cap_gains'], f"${cap_gains_usd:,.2f}")
         
-        # Използваме delta и тук за общата възвращаемост
         c3.metric(
             label=t['total_return'], 
             value=f"{total_return_pct:.2f}%",
@@ -242,7 +242,7 @@ with tab2:
         )
         
         if cap_gains_per_share < 0:
-            st.error(f"⚠️ Внимание: Страйкът (${strike_call}) е под вашата цена на купуване (${cost_basis}). Заключвате загуба от капитала!")
+            st.error(f"⚠️ Внимание: Страйкът (${strike_call}) е под вашата цена на купуване (${cost_basis}).")
 
 # ==========================================
 # TAB 3: ROLLING (MANAGEMENT)
@@ -261,8 +261,10 @@ with tab3:
     new_expiry_date = st.date_input(t['new_expiry_lbl'], min_value=today, key="roll_date")
     days_roll = (new_expiry_date - today).days
     
+    # --- НОВО: ПОКАЗВАНЕ НА ДНИТЕ ВЕДНАГА ---
     if days_roll > 0:
-        st.caption(f"📅 +{days_roll} дни")
+        st.caption(f"📅 {t['days_left']} **{days_roll}** {t['days_count']}")
+    # ----------------------------------------
 
     if old_strike > 0 and new_strike > 0:
         strike_diff = abs(new_strike - old_strike)

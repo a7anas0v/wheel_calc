@@ -8,57 +8,34 @@ st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="ce
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 if 'dark_mode' not in st.session_state:
-    st.session_state.dark_mode = False 
+    # Задаваме да стартира в Dark Mode по подразбиране, за да е красиво
+    st.session_state.dark_mode = True 
 
 def toggle_theme():
     st.session_state.dark_mode = not st.session_state.dark_mode
 
-# --- 3. МОЩЕН CSS ЗА ОПРАВЯНЕ НА БЪГОВЕТЕ ---
-# Този път целим директно "popover" елементите (календар и менюта)
+# --- 3. CSS "NUCLEAR OPTION" ЗА ОПРАВЯНЕ НА БЪГОВЕТЕ ---
 
 if st.session_state.dark_mode:
     # === DARK MODE (ТЪМЕН РЕЖИМ) ===
+    # Тук нещата обикновено работят добре с Dark Mode браузъри, 
+    # но за всеки случай подсигуряваме цветовете.
     st.markdown("""
     <style>
-        /* 1. Основни цветове */
-        .stApp { background-color: #0E1117 !important; color: #FAFAFA !important; }
-        header { background-color: #0E1117 !important; }
+        .stApp, header { background-color: #0E1117 !important; color: #FAFAFA !important; }
+        h1, h2, h3, p, div, span, label, li, button { color: #FAFAFA !important; }
+        input, select, textarea { background-color: #262730 !important; color: #FAFAFA !important; }
         
-        /* 2. Текстове */
-        h1, h2, h3, p, div, span, label, li { color: #FAFAFA !important; }
-        
-        /* 3. Полета (Inputs) */
-        input, select, textarea {
-            background-color: #262730 !important;
-            color: #FAFAFA !important;
-        }
-        
-        /* 4. Dropdowns и Selectbox кутийки */
-        div[data-baseweb="select"] > div {
-            background-color: #262730 !important;
-            border-color: #4F4F4F !important;
-            color: #FAFAFA !important;
-        }
-        
-        /* 5. ПОП-ЪПИ: Менюта и Календар (КРИТИЧНО ЗА DARK MODE) */
+        /* Dropdowns и Popovers */
         div[data-baseweb="popover"], div[data-baseweb="menu"], div[data-baseweb="calendar"] {
             background-color: #262730 !important;
             color: #FAFAFA !important;
         }
-        
-        /* Опциите в менюто */
-        ul[data-testid="stSelectboxVirtualDropdown"] li {
-            background-color: #262730 !important;
-            color: #FAFAFA !important;
-        }
-        
-        /* Дните в календара */
-        div[data-baseweb="calendar"] button {
-            color: #FAFAFA !important;
-        }
-
-        /* Метрики */
+        div[data-baseweb="calendar"] button { color: #FAFAFA !important; }
         [data-testid="stMetricValue"] { color: #FAFAFA !important; }
+        
+        /* За да се вижда Toggle бутона */
+        div[data-testid="stCheckbox"] label { color: #FAFAFA !important; }
     </style>
     """, unsafe_allow_html=True)
     
@@ -66,65 +43,78 @@ else:
     # === LIGHT MODE (СВЕТЪЛ РЕЖИМ - FIX) ===
     st.markdown("""
     <style>
-        /* 1. Основни цветове */
-        .stApp { background-color: #FFFFFF !important; color: #000000 !important; }
-        header { background-color: #FFFFFF !important; }
+        /* 1. Глобален ресет към Бяло/Черно */
+        .stApp, header { background-color: #FFFFFF !important; color: #000000 !important; }
         
-        /* 2. Текстове - Насилваме черно навсякъде */
+        /* 2. Текстове и етикети - НАСИЛСТВЕНО ЧЕРНО */
         h1, h2, h3, p, div, span, label, li { color: #000000 !important; }
         
-        /* 3. Полета (Inputs) - Светло сиво */
+        /* 3. Полета за въвеждане - Светло сиво */
         input, select, textarea {
             background-color: #F0F2F6 !important;
             color: #000000 !important;
-        }
-        
-        /* 4. Dropdowns (Самата кутийка) */
-        div[data-baseweb="select"] > div {
-            background-color: #F0F2F6 !important;
-            border-color: #D3D3D3 !important;
-            color: #000000 !important;
-        }
-        /* Текстът в затворено меню */
-        div[data-baseweb="select"] span { color: #000000 !important; }
-        
-        /* 5. ПОП-ЪПИ: Менюта и Календар (ТУК БЕШЕ БЪГЪТ) */
-        /* Насилваме белия фон на изскачащите прозорци */
-        div[data-baseweb="popover"] {
-            background-color: #FFFFFF !important;
             border: 1px solid #D3D3D3 !important;
         }
         
-        div[data-baseweb="menu"] {
-            background-color: #FFFFFF !important;
+        /* 4. FIX: НЕВИДИМИЯТ БУТОН (TOGGLE) */
+        /* Насилваме цвета на текста до иконата */
+        div[data-testid="stCheckbox"] label span {
+            color: #000000 !important; 
+        }
+        /* Самата икона (луничката) също е текст */
+        div[data-testid="stCheckbox"] p {
             color: #000000 !important;
         }
-        
-        /* Опциите в менюто (списъка) */
-        ul[data-testid="stSelectboxVirtualDropdown"] li {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-        }
-        /* Hover ефект за менюто (да се вижда къде е мишката) */
-        ul[data-testid="stSelectboxVirtualDropdown"] li:hover {
-            background-color: #F0F2F6 !important;
-        }
-        
-        /* 6. КАЛЕНДАР FIX */
+
+        /* 5. FIX: ТЪМНИЯТ КАЛЕНДАР */
+        /* Фон на целия календар */
         div[data-baseweb="calendar"] {
             background-color: #FFFFFF !important;
             color: #000000 !important;
         }
-        /* Заглавие на месеца и дните */
-        div[data-baseweb="calendar"] div, div[data-baseweb="calendar"] button {
+        /* Хедър на календара (Месец/Година) - беше тъмен */
+        div[data-baseweb="calendar"] div {
             color: #000000 !important;
         }
-        /* Стрелките на календара */
+        /* Стрелките на календара (SVG) - бяха бели/невидими */
         div[data-baseweb="calendar"] svg {
             fill: #000000 !important;
+            color: #000000 !important;
+        }
+        /* Числата на дните */
+        div[data-baseweb="calendar"] button {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+        /* ИЗКЛЮЧЕНИЕ: Избраният ден (червеното кръгче) трябва да остане цветен */
+        div[data-baseweb="calendar"] button[aria-selected="true"] {
+            background-color: #FF4B4B !important;
+            color: #FFFFFF !important;
+        }
+        /* ИЗКЛЮЧЕНИЕ: Днешният ден (подчертан) */
+        div[data-baseweb="calendar"] button[aria-label^="Today"] {
+            color: #000000 !important;
+        }
+        
+        /* 6. FIX: DROPDOWN MENU */
+        div[data-baseweb="popover"], div[data-baseweb="menu"] {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+        ul[data-testid="stSelectboxVirtualDropdown"] li {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+        /* Hover ефект в менюто */
+        ul[data-testid="stSelectboxVirtualDropdown"] li:hover {
+            background-color: #F0F2F6 !important;
+        }
+        /* Избраната опция в менюто */
+        ul[data-testid="stSelectboxVirtualDropdown"] li[aria-selected="true"] {
+            background-color: #FF4B4B !important;
+            color: #FFFFFF !important;
         }
 
-        /* Метрики */
         [data-testid="stMetricValue"] { color: #000000 !important; }
     </style>
     """, unsafe_allow_html=True)
@@ -224,7 +214,6 @@ texts = {
 col_title, col_lang, col_dark = st.columns([6, 1, 1])
 
 with col_lang:
-    # Език
     lang_sel = st.selectbox(
         "🌐", 
         ["BG", "EN"], 

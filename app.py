@@ -4,76 +4,87 @@ from datetime import date
 # --- 1. КОНФИГУРАЦИЯ ---
 st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="centered")
 
-# Инициализиране на Session State
+# --- 2. УПРАВЛЕНИЕ НА STATE И ТЕМИ (FIXED) ---
+
+# Инициализация
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 if 'dark_mode' not in st.session_state:
-    # Тук може да промените на True, ако искате да стартира тъмно по подразбиране
-    st.session_state.dark_mode = True 
+    st.session_state.dark_mode = False 
 
-# --- АГРЕСИВЕН CSS ЗА ТЕМИ ---
-# Използваме !important, за да прегазим настройките на браузъра
+# Функция за превключване (Callback) - Решава проблема с "двойния клик"
+def toggle_theme():
+    st.session_state.dark_mode = not st.session_state.dark_mode
+
+# Функция за смяна на език
+def change_language():
+    # Просто презареждаме, за да обнови текстовете
+    pass
+
+# --- 3. CSS ИНЖЕКЦИЯ (ПОДОБРЕНА ЗА ПОЛЕТАТА) ---
 if st.session_state.dark_mode:
-    # === DARK MODE CSS ===
+    # === DARK MODE ===
     st.markdown("""
     <style>
-        /* Основен фон */
-        .stApp {
-            background-color: #0E1117 !important;
+        /* Основен фон и текст */
+        .stApp { background-color: #0E1117 !important; color: #FAFAFA !important; }
+        header { background-color: #0E1117 !important; }
+        
+        /* Текстове */
+        h1, h2, h3, p, div, span, label { color: #FAFAFA !important; }
+        
+        /* Полета за писане (Input fields) - Тъмен фон, бял текст */
+        input, select, textarea {
             color: #FAFAFA !important;
-        }
-        /* Хедър (горната лента) */
-        header[data-testid="stHeader"] {
-            background-color: #0E1117 !important;
-        }
-        /* Всички текстове */
-        p, h1, h2, h3, div, label, span {
-            color: #FAFAFA !important;
-        }
-        /* Полетата за писане и календара */
-        .stNumberInput input, .stDateInput input, .stSelectbox div[data-baseweb="select"] {
             background-color: #262730 !important;
-            color: #FAFAFA !important;
         }
+        /* Dropdowns и Date Picker контейнери */
+        div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
+            background-color: #262730 !important;
+            border-color: #4F4F4F !important;
+        }
+        /* Календар текст */
+        div[data-baseweb="calendar"] { background-color: #262730 !important; }
+        
+        /* Метрики */
+        [data-testid="stMetricValue"] { color: #FAFAFA !important; }
     </style>
     """, unsafe_allow_html=True)
 else:
-    # === LIGHT MODE CSS (FORCE) ===
-    # Това е важно, за да върнем бялото, ако браузърът ви е тъмен
+    # === LIGHT MODE (FORCE) ===
     st.markdown("""
     <style>
-        /* Основен фон */
-        .stApp {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-        }
-        /* Хедър */
-        header[data-testid="stHeader"] {
-            background-color: #FFFFFF !important;
-        }
+        /* Основен фон и текст */
+        .stApp { background-color: #FFFFFF !important; color: #000000 !important; }
+        header { background-color: #FFFFFF !important; }
+        
         /* Текстове */
-        p, h1, h2, h3, div, label, span {
-            color: #000000 !important;
+        h1, h2, h3, p, div, span, label { color: #000000 !important; }
+        
+        /* Полета за писане - Бял фон, Черен текст */
+        input, select, textarea {
+            color: #000000 !important; 
+            background-color: #F0F2F6 !important; 
         }
-        /* Полетата */
-        .stNumberInput input, .stDateInput input, .stSelectbox div[data-baseweb="select"] {
+        /* Dropdowns и Date Picker */
+        div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
             background-color: #F0F2F6 !important;
+            border-color: #D3D3D3 !important;
             color: #000000 !important;
         }
-        /* Метриките (големите цифри) */
-        [data-testid="stMetricValue"] {
-            color: #000000 !important;
-        }
+        /* За да се вижда текста вътре в селектите */
+        div[data-baseweb="select"] span { color: #000000 !important; }
+
+        /* Метрики */
+        [data-testid="stMetricValue"] { color: #000000 !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# ... ОТ ТУК НАДОЛУ КОДЪТ Е СЪЩИЯТ (РЕЧНИЦИТЕ И ЛОГИКАТА) ...
 
-# --- 2. РЕЧНИК С ПРЕВОДИ (DICTIONARY) ---
-# Тук дефинираме всички текстове на двата езика
+# --- 4. РЕЧНИК С ПРЕВОДИ ---
 texts = {
     'BG': {
-        'title': "📅 Wheel Strategy Calculator",
+        'title': "Wheel Strategy Calculator",
         'subtitle': "С автоматично изчисляване на дните чрез календар",
         'today': "Днешна дата:",
         'select_calc': "Избери калкулатор:",
@@ -116,7 +127,7 @@ texts = {
         'ok_deal': "✅ ОДОБРЕНО: Рискът е приемлив"
     },
     'EN': {
-        'title': "📅 Wheel Strategy Calculator",
+        'title': "Wheel Strategy Calculator",
         'subtitle': "Automated days calculation via calendar",
         'today': "Today's Date:",
         'select_calc': "Select Calculator:",
@@ -160,24 +171,35 @@ texts = {
     }
 }
 
-# --- 3. ГОРНА ЛЕНТА С НАСТРОЙКИ (TOP BAR) ---
-# Използваме колони, за да сложим бутоните вдясно
+# --- 5. ГОРНА ЛЕНТА С БУТОНИ ---
 col_title, col_lang, col_dark = st.columns([6, 1, 1])
 
 with col_lang:
-    # Език бутон
-    lang_sel = st.selectbox("🌐", ["BG", "EN"], label_visibility="collapsed")
-    st.session_state.language = lang_sel
+    # Език бутон - Вече не ползваме callback, а просто четем стойността
+    lang_sel = st.selectbox(
+        "🌐", 
+        ["BG", "EN"], 
+        index=0 if st.session_state.language=='BG' else 1,
+        label_visibility="collapsed",
+        key="lang_select"
+    )
+    # Обновяваме state
+    if lang_sel != st.session_state.language:
+        st.session_state.language = lang_sel
+        st.rerun() # Рестартираме веднага, за да се смени текста
 
 with col_dark:
-    # Dark Mode бутон (Toggle)
-    is_dark = st.toggle("🌙", value=st.session_state.dark_mode)
-    st.session_state.dark_mode = is_dark
+    # Dark Mode бутон с Callback (on_change)
+    st.toggle(
+        "🌙", 
+        value=st.session_state.dark_mode, 
+        on_change=toggle_theme,
+        key="theme_toggle"
+    )
 
-# Зареждаме избрания речник
 t = texts[st.session_state.language]
 
-# --- 4. ОСНОВНО СЪДЪРЖАНИЕ ---
+# --- 6. СЪДЪРЖАНИЕ НА ПРИЛОЖЕНИЕТО ---
 
 st.title(t['title'])
 st.caption(t['subtitle'])
@@ -185,13 +207,12 @@ st.caption(t['subtitle'])
 today = date.today()
 st.write(f"{t['today']} **{today.strftime('%d.%m.%Y')}**")
 
-# Меню
 option = st.selectbox(
     t['select_calc'],
     (t['opt_new'], t['opt_roll'])
 )
 
-# === ЛОГИКА ЗА НОВА ПОЗИЦИЯ ===
+# === НОВА ПОЗИЦИЯ ===
 if option == t['opt_new']:
     st.header(t['header_new'])
     
@@ -237,7 +258,7 @@ if option == t['opt_new']:
             
         st.caption(f"{t['risk_reward']} = 1 : {rr_ratio:.1f}")
 
-# === ЛОГИКА ЗА РОЛВАНЕ ===
+# === РОЛВАНЕ ===
 elif option == t['opt_roll']:
     st.header(t['header_roll'])
     
@@ -246,7 +267,6 @@ elif option == t['opt_roll']:
         old_strike = st.number_input(t['old_strike'], value=0.0, step=0.5)
         new_strike = st.number_input(t['new_strike'], value=0.0, step=0.5)
     with col2:
-        # Използваме key=... за да е уникален
         roll_type_sel = st.radio(t['roll_type'], (t['credit_txt'], t['debit_txt']))
         price = st.number_input(t['roll_price'], value=0.0, step=0.01)
 

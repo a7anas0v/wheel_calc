@@ -4,123 +4,11 @@ from datetime import date
 # --- 1. КОНФИГУРАЦИЯ ---
 st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="centered")
 
-# --- 2. УПРАВЛЕНИЕ НА STATE (СЪСТОЯНИЕ) ---
+# --- 2. УПРАВЛЕНИЕ НА ЕЗИКА ---
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
-if 'dark_mode' not in st.session_state:
-    # Задаваме да стартира в Dark Mode по подразбиране, за да е красиво
-    st.session_state.dark_mode = True 
 
-def toggle_theme():
-    st.session_state.dark_mode = not st.session_state.dark_mode
-
-# --- 3. CSS "NUCLEAR OPTION" ЗА ОПРАВЯНЕ НА БЪГОВЕТЕ ---
-
-if st.session_state.dark_mode:
-    # === DARK MODE (ТЪМЕН РЕЖИМ) ===
-    # Тук нещата обикновено работят добре с Dark Mode браузъри, 
-    # но за всеки случай подсигуряваме цветовете.
-    st.markdown("""
-    <style>
-        .stApp, header { background-color: #0E1117 !important; color: #FAFAFA !important; }
-        h1, h2, h3, p, div, span, label, li, button { color: #FAFAFA !important; }
-        input, select, textarea { background-color: #262730 !important; color: #FAFAFA !important; }
-        
-        /* Dropdowns и Popovers */
-        div[data-baseweb="popover"], div[data-baseweb="menu"], div[data-baseweb="calendar"] {
-            background-color: #262730 !important;
-            color: #FAFAFA !important;
-        }
-        div[data-baseweb="calendar"] button { color: #FAFAFA !important; }
-        [data-testid="stMetricValue"] { color: #FAFAFA !important; }
-        
-        /* За да се вижда Toggle бутона */
-        div[data-testid="stCheckbox"] label { color: #FAFAFA !important; }
-    </style>
-    """, unsafe_allow_html=True)
-    
-else:
-    # === LIGHT MODE (СВЕТЪЛ РЕЖИМ - FIX) ===
-    st.markdown("""
-    <style>
-        /* 1. Глобален ресет към Бяло/Черно */
-        .stApp, header { background-color: #FFFFFF !important; color: #000000 !important; }
-        
-        /* 2. Текстове и етикети - НАСИЛСТВЕНО ЧЕРНО */
-        h1, h2, h3, p, div, span, label, li { color: #000000 !important; }
-        
-        /* 3. Полета за въвеждане - Светло сиво */
-        input, select, textarea {
-            background-color: #F0F2F6 !important;
-            color: #000000 !important;
-            border: 1px solid #D3D3D3 !important;
-        }
-        
-        /* 4. FIX: НЕВИДИМИЯТ БУТОН (TOGGLE) */
-        /* Насилваме цвета на текста до иконата */
-        div[data-testid="stCheckbox"] label span {
-            color: #000000 !important; 
-        }
-        /* Самата икона (луничката) също е текст */
-        div[data-testid="stCheckbox"] p {
-            color: #000000 !important;
-        }
-
-        /* 5. FIX: ТЪМНИЯТ КАЛЕНДАР */
-        /* Фон на целия календар */
-        div[data-baseweb="calendar"] {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-        }
-        /* Хедър на календара (Месец/Година) - беше тъмен */
-        div[data-baseweb="calendar"] div {
-            color: #000000 !important;
-        }
-        /* Стрелките на календара (SVG) - бяха бели/невидими */
-        div[data-baseweb="calendar"] svg {
-            fill: #000000 !important;
-            color: #000000 !important;
-        }
-        /* Числата на дните */
-        div[data-baseweb="calendar"] button {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-        }
-        /* ИЗКЛЮЧЕНИЕ: Избраният ден (червеното кръгче) трябва да остане цветен */
-        div[data-baseweb="calendar"] button[aria-selected="true"] {
-            background-color: #FF4B4B !important;
-            color: #FFFFFF !important;
-        }
-        /* ИЗКЛЮЧЕНИЕ: Днешният ден (подчертан) */
-        div[data-baseweb="calendar"] button[aria-label^="Today"] {
-            color: #000000 !important;
-        }
-        
-        /* 6. FIX: DROPDOWN MENU */
-        div[data-baseweb="popover"], div[data-baseweb="menu"] {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-        }
-        ul[data-testid="stSelectboxVirtualDropdown"] li {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-        }
-        /* Hover ефект в менюто */
-        ul[data-testid="stSelectboxVirtualDropdown"] li:hover {
-            background-color: #F0F2F6 !important;
-        }
-        /* Избраната опция в менюто */
-        ul[data-testid="stSelectboxVirtualDropdown"] li[aria-selected="true"] {
-            background-color: #FF4B4B !important;
-            color: #FFFFFF !important;
-        }
-
-        [data-testid="stMetricValue"] { color: #000000 !important; }
-    </style>
-    """, unsafe_allow_html=True)
-
-
-# --- 4. РЕЧНИК С ПРЕВОДИ ---
+# --- 3. РЕЧНИК С ПРЕВОДИ ---
 texts = {
     'BG': {
         'title': "Wheel Strategy Calculator",
@@ -210,10 +98,12 @@ texts = {
     }
 }
 
-# --- 5. ГОРНА ЛЕНТА С БУТОНИ ---
-col_title, col_lang, col_dark = st.columns([6, 1, 1])
+# --- 4. ЗАГЛАВИЕ И БУТОН ЗА ЕЗИК (ГОРЕ ВДЯСНО) ---
+# Използваме колони: Голямо заглавие вляво, малък бутон вдясно
+col_header, col_lang = st.columns([5, 1])
 
 with col_lang:
+    # Език бутон
     lang_sel = st.selectbox(
         "🌐", 
         ["BG", "EN"], 
@@ -221,24 +111,19 @@ with col_lang:
         label_visibility="collapsed",
         key="lang_select"
     )
+    # Обновяване при промяна
     if lang_sel != st.session_state.language:
         st.session_state.language = lang_sel
         st.rerun()
 
-with col_dark:
-    # Toggle за темата
-    st.toggle(
-        "🌙", 
-        value=st.session_state.dark_mode, 
-        on_change=toggle_theme,
-        key="theme_toggle"
-    )
-
+# Взимаме текстовете за текущия език
 t = texts[st.session_state.language]
 
-# --- 6. СЪДЪРЖАНИЕ ---
+# --- 5. ОСНОВНО СЪДЪРЖАНИЕ ---
 
-st.title(t['title'])
+with col_header:
+    st.title(t['title'])
+
 st.caption(t['subtitle'])
 
 today = date.today()
@@ -249,7 +134,7 @@ option = st.selectbox(
     (t['opt_new'], t['opt_roll'])
 )
 
-# === НОВА ПОЗИЦИЯ ===
+# === ЛОГИКА ЗА НОВА ПОЗИЦИЯ ===
 if option == t['opt_new']:
     st.header(t['header_new'])
     
@@ -295,7 +180,7 @@ if option == t['opt_new']:
             
         st.caption(f"{t['risk_reward']} = 1 : {rr_ratio:.1f}")
 
-# === РОЛВАНЕ ===
+# === ЛОГИКА ЗА РОЛВАНЕ ===
 elif option == t['opt_roll']:
     st.header(t['header_roll'])
     

@@ -8,14 +8,14 @@ st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="ce
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 
-# --- 3. РЕЧНИК С ПРЕВОДИ (FIXED) ---
+# --- 3. РЕЧНИК С ПРЕВОДИ ---
 texts = {
     'BG': {
         'title': "Wheel Strategy Calculator",
         'subtitle': "Професионален анализ на опции и риск",
         'tab_put': "🟢 1. Продажба на PUT (Вход)",
         'tab_call': "🔴 2. Продажба на CALL (Изход)",
-        'tab_roll': "🔄 3. Ролване (Стратегия)",
+        'tab_roll': "🔄 3. Ролване (Анализ)",
         # Общи
         'current_price': "Текуща цена на акцията ($)",
         'strike': "Страйк Цена ($)",
@@ -41,31 +41,37 @@ texts = {
         'total_profit': "ОБЩА потенциална печалба",
         'total_return': "Общ ROI (Total Return)",
         'prem_return': "Доход от Премия",
-        # ROLLING (FIXED MISSING KEYS)
+        # ROLLING (РАЗШИРЕНО)
         'roll_header': "Стратегически Анализ на Ролване",
-        'roll_strategy': "Каква позиция ролвате?",
-        'strat_call': "Covered CALL (Ролване нагоре/напред)",
-        'strat_put': "Cash Secured PUT (Ролване надолу/напред)",
-        'col_curr': "🏦 ТЕКУЩА Позиция (От какво бягате?)",
-        'col_new': "✨ НОВА Позиция (Към какво отивате?)",
-        'roll_expiry': "Нова дата на падеж",
-        'roll_type': "Тип на транзакцията:",  # <--- ВЪРНАТ ЛИПСВАЩИЯ КЛЮЧ
+        'roll_strategy': "Стратегия:",
+        'strat_call': "Covered CALL (Ролване нагоре)",
+        'strat_put': "Cash Secured PUT (Ролване надолу)",
+        # Inputs
+        'orig_data': "📜 История на позицията",
+        'orig_date': "Дата на отваряне (Start Date)",
+        'orig_prem': "Първоначална премия ($)",
+        'curr_exp': "Текущ падеж (Current Expiry)",
+        'new_data': "✨ Параметри на Ролването",
+        'old_strike': "Текущ Страйк ($)",
+        'new_strike': "Нов Страйк ($)",
         'roll_cost_lbl': "Цена на ролването (Net Price)",
-        'roll_credit': "Credit (Взимам пари)",
-        'roll_debit': "Debit (Плащам пари)",
-        'analysis_title': "📊 Сравнителен Анализ",
-        'metric_cash': "Кеш ефект днес",
-        'metric_cap': "Доп. Капиталов Потенциал",
-        'metric_total': "Общо Подобрение (Net Economic Value)",
-        'metric_ann': "Годишна доходност на ролването",
-        'verdict_good': "✅ ОТЛИЧЕН ХОД",
-        'verdict_bad': "🛑 НЕИЗГОДНО",
-        'verdict_ok': "⚠️ ПРИЕМЛИВО",
-        'reason_credit': "Взимате пари + Вдигате тавана на печалбата.",
-        'reason_debit_good': "Плащате малко, за да отключите голям потенциал.",
-        'reason_debit_bad': "Плащате твърде скъпо (>33%) за този потенциал.",
-        'msg_strike_imp': "Разлика в страйковете",
-        'msg_days_added': "Добавени дни риск"
+        'roll_credit': "Credit (Взимам)",
+        'roll_debit': "Debit (Плащам)",
+        'new_expiry': "Нов Падеж",
+        # Analysis
+        'an_comparison': "📊 Сравнение на Сценариите",
+        'scen_base': "1️⃣ БАЗОВ: Не правите нищо",
+        'scen_fail': "2️⃣ ЛОШ КЪСМЕТ (Failed Roll)",
+        'scen_win': "3️⃣ УСПЕХ (Max Profit)",
+        'row_profit': "Нетна Печалба",
+        'row_days': "Общо дни в сделката",
+        'row_ann': "Годишна Доходност (APR)",
+        'risk_insight': "💡 ИЗВОД И РИСК",
+        'risk_text_1': "Рискувате доходността ви да падне от",
+        'risk_text_2': "на",
+        'risk_text_3': "за да гоните потенциал за",
+        'verdict_great': "✅ ОТЛИЧНО: Малък риск за голяма награда.",
+        'verdict_bad': "🛑 НЕ СИ СТРУВА: Рискувате твърде много доходност."
     },
     'EN': {
         'title': "Wheel Strategy Calculator",
@@ -100,29 +106,35 @@ texts = {
         'prem_return': "Premium Return",
         # ROLLING
         'roll_header': "Rolling Strategy Analysis",
-        'roll_strategy': "Which Strategy?",
-        'strat_call': "Covered CALL (Rolling UP/OUT)",
-        'strat_put': "Cash Secured PUT (Rolling DOWN/OUT)",
-        'col_curr': "🏦 CURRENT Position (From)",
-        'col_new': "✨ NEW Position (To)",
-        'roll_expiry': "New Expiration Date",
-        'roll_type': "Transaction Type:", # <--- ВЪРНАТ ЛИПСВАЩИЯ КЛЮЧ
+        'roll_strategy': "Strategy:",
+        'strat_call': "Covered CALL (Rolling UP)",
+        'strat_put': "Cash Secured PUT (Rolling DOWN)",
+        # Inputs
+        'orig_data': "📜 Position History",
+        'orig_date': "Original Open Date",
+        'orig_prem': "Original Premium ($)",
+        'curr_exp': "Current Expiry Date",
+        'new_data': "✨ Roll Parameters",
+        'old_strike': "Current Strike ($)",
+        'new_strike': "New Strike ($)",
         'roll_cost_lbl': "Net Roll Price",
-        'roll_credit': "Credit (Receive Cash)",
-        'roll_debit': "Debit (Pay Cash)",
-        'analysis_title': "📊 Comparative Analysis",
-        'metric_cash': "Immediate Cash Flow",
-        'metric_cap': "Added Capital Potential",
-        'metric_total': "Total Economic Value",
-        'metric_ann': "Annualized Roll Return",
-        'verdict_good': "✅ GREAT TRADE",
-        'verdict_bad': "🛑 BAD DEAL",
-        'verdict_ok': "⚠️ ACCEPTABLE",
-        'reason_credit': "You get cash + Higher profit ceiling.",
-        'reason_debit_good': "Small cost to unlock big potential.",
-        'reason_debit_bad': "Too expensive (>33%) for the gain.",
-        'msg_strike_imp': "Strike Difference",
-        'msg_days_added': "Days Added"
+        'roll_credit': "Credit (Receive)",
+        'roll_debit': "Debit (Pay)",
+        'new_expiry': "New Expiry Date",
+        # Analysis
+        'an_comparison': "📊 Scenario Comparison",
+        'scen_base': "1️⃣ BASE: Do Nothing",
+        'scen_fail': "2️⃣ BAD LUCK (Failed Roll)",
+        'scen_win': "3️⃣ SUCCESS (Max Profit)",
+        'row_profit': "Net Profit",
+        'row_days': "Total Days Held",
+        'row_ann': "Annualized ROI (APR)",
+        'risk_insight': "💡 RISK INSIGHT",
+        'risk_text_1': "You risk dropping your yield from",
+        'risk_text_2': "to",
+        'risk_text_3': "to chase a potential",
+        'verdict_great': "✅ GREAT TRADE: Low risk for high reward.",
+        'verdict_bad': "🛑 BAD DEAL: Giving up too much yield."
     }
 }
 
@@ -237,7 +249,7 @@ with tab2:
             st.error(f"⚠️ Внимание: Страйкът (${strike_call}) е под вашата цена на купуване (${cost_basis}).")
 
 # ==========================================
-# TAB 3: ROLLING (NEW STRATEGIC VIEW)
+# TAB 3: ROLLING (FULL SCENARIO ANALYSIS)
 # ==========================================
 with tab3:
     st.header(t['roll_header'])
@@ -248,127 +260,133 @@ with tab3:
     
     st.divider()
     
-    # 2. Входни данни (Сравнителен изглед)
-    col_old, col_new = st.columns(2)
+    # === ВХОДНИ ДАННИ ===
     
-    with col_old:
-        st.subheader(t['col_curr'])
-        old_strike_in = st.number_input(t['strike'], value=None, step=0.5, key="old_strike", placeholder="0.00")
-        
+    # КОЛОНА 1: ИСТОРИЯ
+    col_hist, col_new = st.columns(2)
+    
+    with col_hist:
+        st.subheader(t['orig_data'])
+        # Дата на отваряне
+        orig_date = st.date_input(t['orig_date'], value=today, key="orig_date_in")
+        # Стара премия
+        op_input = st.number_input(t['orig_prem'], value=None, step=0.01, placeholder="0.00")
+        orig_premium = op_input if op_input is not None else 0.0
+        # Текущ страйк
+        os_input = st.number_input(t['old_strike'], value=None, step=0.5, placeholder="0.00")
+        old_strike = os_input if os_input is not None else 0.0
+        # Текущ падеж
+        curr_expiry = st.date_input(t['curr_exp'], value=today, key="curr_exp_in")
+
     with col_new:
-        st.subheader(t['col_new'])
-        new_strike_in = st.number_input(t['strike'], value=None, step=0.5, key="new_strike", placeholder="0.00")
-        new_expiry = st.date_input(t['roll_expiry'], min_value=today, key="roll_date")
-    
-    old_strike = old_strike_in if old_strike_in is not None else 0.0
-    new_strike = new_strike_in if new_strike_in is not None else 0.0
-    
-    st.write("") # Spacer
-    
-    # Данни за самата сделка (Net Price)
-    c1, c2 = st.columns([1, 2])
-    with c1:
-        # ЕТО ТУК БЕШЕ ГРЕШКАТА - Ключът 'roll_type' сега съществува
-        roll_type = st.radio(t['roll_type'], (t['roll_credit'], t['roll_debit']))
-    with c2:
-        price_in = st.number_input(t['roll_cost_lbl'], value=None, step=0.01, placeholder="0.00")
-        roll_price = price_in if price_in is not None else 0.0
-
-    days_roll = (new_expiry - today).days
-    if days_roll > 0:
-        st.caption(f"📅 +{days_roll} {t['days_count']}")
-
-    # 3. АНАЛИЗ
-    if old_strike > 0 and new_strike > 0:
-        st.divider()
-        st.subheader(t['analysis_title'])
+        st.subheader(t['new_data'])
+        # Нов страйк
+        ns_input = st.number_input(t['new_strike'], value=None, step=0.5, placeholder="0.00")
+        new_strike = ns_input if ns_input is not None else 0.0
+        # Нов падеж
+        new_expiry = st.date_input(t['new_expiry'], value=today, key="new_exp_in")
         
-        # Логика за "Подобрение на страйка" (Strike Improvement)
+        # Цена на ролване
+        roll_type = st.radio(t['roll_type'], (t['roll_credit'], t['roll_debit']), horizontal=True)
+        rp_input = st.number_input(t['roll_cost_lbl'], value=None, step=0.01, placeholder="0.00")
+        roll_price = rp_input if rp_input is not None else 0.0
+
+    # === ИЗЧИСЛЕНИЯ ===
+    if old_strike > 0 and new_strike > 0 and orig_premium > 0:
+        st.divider()
+        st.subheader(t['an_comparison'])
+        
+        # Дни
+        days_base = (curr_expiry - orig_date).days
+        days_total = (new_expiry - orig_date).days # Целият цикъл
+        days_added = (new_expiry - curr_expiry).days
+        
+        if days_base <= 0: days_base = 1 # Защита от делене на 0
+        if days_total <= 0: days_total = 1
+        
+        # 1. SCENARIO BASE (Не правите нищо)
+        # Приемаме, че печелите само оригиналната премия за оригиналното време
+        profit_base = orig_premium
+        roi_base = (profit_base / old_strike) * 100
+        ann_base = (roi_base / days_base) * 365
+        
+        # 2. SCENARIO FAILED ROLL (Лош късмет)
+        # Ролвате, плащате/взимате пари, но цената не стига новия страйк
+        # Нетна премия = Стара + (Кредит) или - (Дебит)
+        net_premium = 0.0
+        if roll_type == t['roll_credit']:
+            net_premium = orig_premium + roll_price
+        else:
+            net_premium = orig_premium - roll_price
+            
+        profit_fail = net_premium
+        roi_fail = (profit_fail / old_strike) * 100 # Върху стария капитал
+        ann_fail = (roi_fail / days_total) * 365
+        
+        # 3. SCENARIO SUCCESS (Max Profit)
+        # Ако е Call и вдигаме страйка -> печелим и разликата
+        # Ако е Put и сваляме страйка -> намаляваме риска, но тук ще гледаме финансовата полза
         strike_diff = 0.0
         if is_call:
-            # При Call искаме по-висок страйк (Upside)
-            strike_diff = new_strike - old_strike
+             strike_diff = new_strike - old_strike
         else:
-            # При Put искаме по-нисък страйк (Lower buying price)
-            strike_diff = old_strike - new_strike 
+             strike_diff = old_strike - new_strike # При Put по-ниският страйк е по-добър за придобиване
+        
+        profit_win = net_premium + strike_diff
+        roi_win = (profit_win / old_strike) * 100
+        ann_win = (roi_win / days_total) * 365
+
+        # === ВИЗУАЛИЗАЦИЯ (ТАБЛИЦА) ===
+        # Използваме колони за по-добра четимост
+        
+        col_s1, col_s2, col_s3 = st.columns(3)
+        
+        # Базов сценарий
+        with col_s1:
+            st.info(t['scen_base'])
+            st.metric(t['row_profit'], f"${profit_base:.2f}")
+            st.metric(t['row_days'], f"{days_base} {t['days_count']}")
+            st.metric(t['row_ann'], f"{ann_base:.2f}%")
             
-        # Финансова логика
-        net_cash_impact = roll_price if roll_type == t['roll_credit'] else -roll_price
-        total_economic_value = net_cash_impact + strike_diff
-        
-        # Годишна доходност на самото ролване
-        # Използваме "Risk Capital" = New Strike (за Put) или Current Strike (за Call)
-        # Това е приблизително, но достатъчно за сравнение
-        capital_locked = new_strike
-        ann_roll_return = 0.0
-        if days_roll > 0 and capital_locked > 0:
-             # ROI на "Net Economic Value" върху капитала
-             ann_roll_return = ((total_economic_value / capital_locked) * 100 / days_roll) * 365
+        # Лош сценарий (Fail)
+        with col_s2:
+            st.warning(t['scen_fail'])
+            # Оцветяваме нетната печалба - ако пада спрямо базовия
+            delta_val = None
+            if profit_fail < profit_base: delta_val = f"-${(profit_base - profit_fail):.2f}"
+            
+            st.metric(t['row_profit'], f"${profit_fail:.2f}", delta=delta_val)
+            st.metric(t['row_days'], f"{days_total} {t['days_count']}")
+            
+            # Оцветяваме годишната доходност - това е най-важното сравнение
+            ann_delta = f"{(ann_fail - ann_base):.2f}%"
+            st.metric(t['row_ann'], f"{ann_fail:.2f}%", delta=ann_delta)
 
-        # ВИЗУАЛИЗАЦИЯ НА РЕЗУЛТАТИТЕ
-        col_res1, col_res2, col_res3 = st.columns(3)
-        
-        # 1. Кеш ефект
-        col_res1.metric(
-            t['metric_cash'], 
-            f"${net_cash_impact:.2f}", 
-            delta="Credit" if net_cash_impact > 0 else "-Debit"
-        )
-        
-        # 2. Капиталов ефект
-        col_res2.metric(
-            t['metric_cap'], 
-            f"${strike_diff:.2f}",
-            delta=f"{t['msg_strike_imp']}"
-        )
-        
-        # 3. ОБЩО (Total Economic Value)
-        col_res3.metric(
-            t['metric_total'], 
-            f"${total_economic_value:.2f}",
-            delta="Net Value"
-        )
+        # Успешен сценарий (Win)
+        with col_s3:
+            st.success(t['scen_win'])
+            st.metric(t['row_profit'], f"${profit_win:.2f}", delta=f"+${(profit_win - profit_fail):.2f}")
+            st.metric(t['row_days'], f"{days_total} {t['days_count']}")
+            st.metric(t['row_ann'], f"{ann_win:.2f}%", delta=f"{(ann_win - ann_base):.2f}%")
 
-        # 4. ГОДИШНА ДОХОДНОСТ И ПРИСЪДА
         st.write("---")
         
-        # Логика за "Присъда" (Verdict)
-        is_good_deal = False
-        reason = ""
+        # === ИЗВОДИТЕ (VERDICT) ===
+        st.subheader(t['risk_insight'])
         
-        if roll_type == t['roll_credit']:
-            # Credit Roll: Винаги е добре, ако вдигаме и страйка
-            if strike_diff >= 0:
-                is_good_deal = True
-                verdict = t['verdict_good']
-                reason = t['reason_credit']
-                st.success(f"## {verdict}")
-                st.write(reason)
-            else:
-                # Credit Roll, но губим страйк (Defensive roll)
-                verdict = t['verdict_ok']
-                st.warning(f"## {verdict}")
-                st.write("Взимате кредит, но 'затваряте' потенциала на позицията (Inverted roll?).")
-
-        else: # Debit Roll
-            # Debit Roll: Трябва да спазваме правилото на 33%
-            if strike_diff > 0:
-                cost_percent = (roll_price / strike_diff) * 100
-                st.write(f"Плащате **{cost_percent:.1f}%** от новия потенциал.")
-                st.progress(min(cost_percent / 100, 1.0))
-                
-                if cost_percent <= 33:
-                    verdict = t['verdict_good']
-                    reason = t['reason_debit_good']
-                    st.success(f"## {verdict}")
-                    st.write(reason)
-                else:
-                    verdict = t['verdict_bad']
-                    reason = t['reason_debit_bad']
-                    st.error(f"## {verdict}")
-                    st.write(reason)
-            else:
-                st.error("🛑 Плащате пари (Debit), без да подобрявате страйка! Това е сигурна загуба.")
-
-        if days_roll > 0:
-            st.caption(f"📈 {t['metric_ann']}: **{ann_roll_return:.2f}%**")
+        # Формулираме изречението: "Рискувате доходността да падне от X% на Y%, за да гоните Z%"
+        if ann_fail < ann_base:
+            st.write(f"""
+            📉 {t['risk_text_1']} **{ann_base:.2f}%** {t['risk_text_2']} **{ann_fail:.2f}%** (в случай на провал),
+            {t['risk_text_3']} **{ann_win:.2f}%** (при успех).
+            """)
+        else:
+            st.write(f"📈 Дори при провал, доходността ви се повишава до **{ann_fail:.2f}%**! Това е чиста победа.")
+            
+        # Крайна присъда
+        if ann_win > ann_base and ann_fail > (ann_base * 0.5):
+             st.success(t['verdict_great'])
+        elif ann_fail < (ann_base * 0.5): # Ако при провал падаме с над 50%
+             st.error(t['verdict_bad'])
+        else:
+             st.info("⚠️ Сделката е неутрална/приемлива.")

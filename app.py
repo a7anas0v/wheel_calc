@@ -135,47 +135,49 @@ with tab1:
     
     col1, col2 = st.columns(2)
     with col1:
-        current_price = st.number_input(t['current_price'], value=0.0, step=0.10, key="put_price")
-        strike = st.number_input(t['strike'], value=0.0, step=0.5, key="put_strike")
+        # value=None прави полето празно. placeholder показва "0.00" в сиво.
+        cp_input = st.number_input(t['current_price'], value=None, step=0.10, placeholder="0.00")
+        strike_input = st.number_input(t['strike'], value=None, step=0.5, placeholder="0.00")
+        
+        # Защита: Ако е празно (None), приемаме 0.0 за сметките
+        current_price = cp_input if cp_input is not None else 0.0
+        strike = strike_input if strike_input is not None else 0.0
+        
     with col2:
-        premium = st.number_input(t['premium'], value=0.0, step=0.01, key="put_prem")
-        contracts = st.number_input(t['contracts'], value=1, step=1, key="put_cont")
+        prem_input = st.number_input(t['premium'], value=None, step=0.01, placeholder="0.00")
+        # Контрактите е по-добре да са 1 по подразбиране
+        contracts = st.number_input(t['contracts'], value=1, step=1)
+        
+        premium = prem_input if prem_input is not None else 0.0
     
-    # Календар
     expiry_date = st.date_input(t['date_expiry'], min_value=today, value=today, key="put_date")
     days = (expiry_date - today).days
 
-    # --- НОВО: ПОКАЗВАНЕ НА ДНИТЕ ВЕДНАГА ---
     if days > 0:
         st.caption(f"📅 {t['days_left']} **{days}** {t['days_count']}")
     elif days == 0:
         st.warning(t['warning_today'])
-    # ----------------------------------------
 
     if strike > 0 and days > 0:
         # ИЗЧИСЛЕНИЯ
         collateral = strike * 100 * contracts
         breakeven = strike - premium
         
-        # Buffer %
         buffer_pct = 0.0
         if current_price > 0:
             buffer_pct = ((current_price - breakeven) / current_price) * 100
         
-        # ROI
         flat_return = (premium / strike) * 100
         ann_return = (flat_return / days) * 365
         
         st.write("---")
         
-        # Резултати
         st.success(f"📊 **{t['return_annual']}: {ann_return:.2f}%**")
         
         c1, c2, c3 = st.columns(3)
         c1.metric(t['return_flat'], f"{flat_return:.2f}%")
         c2.metric(t['breakeven'], f"${breakeven:.2f}")
         
-        # Оцветяване на буфера (Червено/Зелено)
         c3.metric(
             label=t['buffer'], 
             value=f"{buffer_pct:.2f}%", 
@@ -198,24 +200,27 @@ with tab2:
     
     col1, col2 = st.columns(2)
     with col1:
-        cost_basis = st.number_input(t['cost_basis'], value=0.0, step=0.10, help="Цената, на която сте купили акциите.")
-        strike_call = st.number_input(t['strike'], value=0.0, step=0.5, key="call_strike")
+        cb_input = st.number_input(t['cost_basis'], value=None, step=0.10, help="Вашата средна цена", placeholder="0.00")
+        strike_call_input = st.number_input(t['strike'], value=None, step=0.5, key="call_strike", placeholder="0.00")
+        
+        cost_basis = cb_input if cb_input is not None else 0.0
+        strike_call = strike_call_input if strike_call_input is not None else 0.0
+        
     with col2:
-        premium_call = st.number_input(t['premium'], value=0.0, step=0.01, key="call_prem")
+        prem_call_input = st.number_input(t['premium'], value=None, step=0.01, key="call_prem", placeholder="0.00")
         contracts_call = st.number_input(t['contracts'], value=1, step=1, key="call_cont")
+        
+        premium_call = prem_call_input if prem_call_input is not None else 0.0
         
     expiry_date_call = st.date_input(t['date_expiry'], min_value=today, value=today, key="call_date")
     days_call = (expiry_date_call - today).days
 
-    # --- НОВО: ПОКАЗВАНЕ НА ДНИТЕ ВЕДНАГА ---
     if days_call > 0:
         st.caption(f"📅 {t['days_left']} **{days_call}** {t['days_count']}")
     elif days_call == 0:
         st.warning(t['warning_today'])
-    # ----------------------------------------
 
     if strike_call > 0 and cost_basis > 0 and days_call > 0:
-        # ИЗЧИСЛЕНИЯ
         flat_prem_return = (premium_call / cost_basis) * 100
         ann_prem_return = (flat_prem_return / days_call) * 365
         
@@ -252,19 +257,23 @@ with tab3:
     
     col1, col2 = st.columns(2)
     with col1:
-        old_strike = st.number_input(t['old_strike'], value=0.0, step=0.5)
-        new_strike = st.number_input(t['new_strike'], value=0.0, step=0.5)
+        os_input = st.number_input(t['old_strike'], value=None, step=0.5, placeholder="0.00")
+        ns_input = st.number_input(t['new_strike'], value=None, step=0.5, placeholder="0.00")
+        
+        old_strike = os_input if os_input is not None else 0.0
+        new_strike = ns_input if ns_input is not None else 0.0
+        
     with col2:
         roll_type = st.radio(t['roll_type'], (t['credit_txt'], t['debit_txt']))
-        price = st.number_input(t['roll_price'], value=0.0, step=0.01)
+        
+        p_input = st.number_input(t['roll_price'], value=None, step=0.01, placeholder="0.00")
+        price = p_input if p_input is not None else 0.0
 
     new_expiry_date = st.date_input(t['new_expiry_lbl'], min_value=today, key="roll_date")
     days_roll = (new_expiry_date - today).days
     
-    # --- НОВО: ПОКАЗВАНЕ НА ДНИТЕ ВЕДНАГА ---
     if days_roll > 0:
         st.caption(f"📅 {t['days_left']} **{days_roll}** {t['days_count']}")
-    # ----------------------------------------
 
     if old_strike > 0 and new_strike > 0:
         strike_diff = abs(new_strike - old_strike)

@@ -8,7 +8,7 @@ st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="ce
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 
-# --- 3. РЕЧНИК С ПРЕВОДИ (Разширен с новите термини) ---
+# --- 3. РЕЧНИК С ПРЕВОДИ ---
 texts = {
     'BG': {
         'title': "Wheel Strategy Calculator",
@@ -32,6 +32,7 @@ texts = {
         'return_flat': "Възвращаемост (Flat)",
         'return_annual': "Годишна доходност (Annualized)",
         'safety_msg': "Колко може да падне акцията, преди да сте на загуба.",
+        'danger_msg': "⚠️ Внимание: Текущата цена вече е под вашата Break-Even точка!",
         # CALL Метрики
         'call_header': "Анализ на Covered Call",
         'cost_basis': "Вашата средна цена (Net Cost Basis) ($)",
@@ -78,6 +79,7 @@ texts = {
         'return_flat': "Return on Risk (Flat)",
         'return_annual': "Annualized ROI",
         'safety_msg': "How much the stock can drop before you lose money.",
+        'danger_msg': "⚠️ Warning: Current price is already below your Break-Even point!",
         # CALL Metrics
         'call_header': "Covered Call Analysis",
         'cost_basis': "Your Net Cost Basis ($)",
@@ -165,9 +167,21 @@ with tab1:
         c1, c2, c3 = st.columns(3)
         c1.metric(t['return_flat'], f"{flat_return:.2f}%")
         c2.metric(t['breakeven'], f"${breakeven:.2f}")
-        c3.metric(t['buffer'], f"{buffer_pct:.2f}%")
         
-        st.caption(f"🛡️ {t['safety_msg']}")
+        # --- ПРОМЯНАТА Е ТУК ---
+        # Използваме параметъра 'delta', за да оцветим автоматично.
+        # Ако е положително -> Зелено. Ако е отрицателно -> Червено.
+        c3.metric(
+            label=t['buffer'], 
+            value=f"{buffer_pct:.2f}%", 
+            delta=f"{buffer_pct:.2f}%" if current_price > 0 else None
+        )
+        # -----------------------
+        
+        if buffer_pct < 0 and current_price > 0:
+             st.error(t['danger_msg'])
+        else:
+             st.caption(f"🛡️ {t['safety_msg']}")
         
         # Collateral Info
         st.info(f"💰 {t['collateral']}: **${collateral:,.0f}**")
@@ -217,9 +231,15 @@ with tab2:
         
         c1, c2, c3 = st.columns(3)
         # Показваме ROI на премията + годишна база
-        c1.metric(t['prem_return'], f"{flat_prem_return:.2f}%", f"{ann_prem_return:.1f}% Annually")
+        c1.metric(t['prem_return'], f"{flat_prem_return:.2f}%", f"{ann_prem_return:.1f}% Ann.")
         c2.metric(t['cap_gains'], f"${cap_gains_usd:,.2f}")
-        c3.metric(t['total_return'], f"{total_return_pct:.2f}%")
+        
+        # Използваме delta и тук за общата възвращаемост
+        c3.metric(
+            label=t['total_return'], 
+            value=f"{total_return_pct:.2f}%",
+            delta=f"{total_return_pct:.2f}%"
+        )
         
         if cap_gains_per_share < 0:
             st.error(f"⚠️ Внимание: Страйкът (${strike_call}) е под вашата цена на купуване (${cost_basis}). Заключвате загуба от капитала!")

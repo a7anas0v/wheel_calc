@@ -1,32 +1,73 @@
 import streamlit as st
 from datetime import date
 
-# --- 1. КОНФИГУРАЦИЯ И CSS ЗА DARK MODE ---
+# --- 1. КОНФИГУРАЦИЯ ---
 st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="centered")
 
-# Инициализиране на Session State (за да помни настройките)
+# Инициализиране на Session State
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 if 'dark_mode' not in st.session_state:
-    st.session_state.dark_mode = False
+    # Тук може да промените на True, ако искате да стартира тъмно по подразбиране
+    st.session_state.dark_mode = True 
 
-# CSS за Dark Mode (насилствена смяна на цветовете)
+# --- АГРЕСИВЕН CSS ЗА ТЕМИ ---
+# Използваме !important, за да прегазим настройките на браузъра
 if st.session_state.dark_mode:
+    # === DARK MODE CSS ===
     st.markdown("""
     <style>
-    .stApp {
-        background-color: #0E1117;
-        color: #FAFAFA;
-    }
-    .stNumberInput input, .stSelectbox, .stDateInput input {
-        color: #FAFAFA !important;
-    }
-    /* За да се виждат метриките добре на тъмно */
-    [data-testid="stMetricValue"] {
-        color: #FAFAFA !important;
-    }
+        /* Основен фон */
+        .stApp {
+            background-color: #0E1117 !important;
+            color: #FAFAFA !important;
+        }
+        /* Хедър (горната лента) */
+        header[data-testid="stHeader"] {
+            background-color: #0E1117 !important;
+        }
+        /* Всички текстове */
+        p, h1, h2, h3, div, label, span {
+            color: #FAFAFA !important;
+        }
+        /* Полетата за писане и календара */
+        .stNumberInput input, .stDateInput input, .stSelectbox div[data-baseweb="select"] {
+            background-color: #262730 !important;
+            color: #FAFAFA !important;
+        }
     </style>
     """, unsafe_allow_html=True)
+else:
+    # === LIGHT MODE CSS (FORCE) ===
+    # Това е важно, за да върнем бялото, ако браузърът ви е тъмен
+    st.markdown("""
+    <style>
+        /* Основен фон */
+        .stApp {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+        /* Хедър */
+        header[data-testid="stHeader"] {
+            background-color: #FFFFFF !important;
+        }
+        /* Текстове */
+        p, h1, h2, h3, div, label, span {
+            color: #000000 !important;
+        }
+        /* Полетата */
+        .stNumberInput input, .stDateInput input, .stSelectbox div[data-baseweb="select"] {
+            background-color: #F0F2F6 !important;
+            color: #000000 !important;
+        }
+        /* Метриките (големите цифри) */
+        [data-testid="stMetricValue"] {
+            color: #000000 !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+# ... ОТ ТУК НАДОЛУ КОДЪТ Е СЪЩИЯТ (РЕЧНИЦИТЕ И ЛОГИКАТА) ...
 
 # --- 2. РЕЧНИК С ПРЕВОДИ (DICTIONARY) ---
 # Тук дефинираме всички текстове на двата езика

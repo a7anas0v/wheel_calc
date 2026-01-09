@@ -4,76 +4,125 @@ from datetime import date
 # --- 1. КОНФИГУРАЦИЯ ---
 st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="centered")
 
-# --- 2. УПРАВЛЕНИЕ НА STATE И ТЕМИ (FIXED) ---
-
-# Инициализация
+# --- 2. УПРАВЛЕНИЕ НА STATE (СЪСТОЯНИЕ) ---
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 if 'dark_mode' not in st.session_state:
     st.session_state.dark_mode = False 
 
-# Функция за превключване (Callback) - Решава проблема с "двойния клик"
 def toggle_theme():
     st.session_state.dark_mode = not st.session_state.dark_mode
 
-# Функция за смяна на език
-def change_language():
-    # Просто презареждаме, за да обнови текстовете
-    pass
+# --- 3. МОЩЕН CSS ЗА ОПРАВЯНЕ НА БЪГОВЕТЕ ---
+# Този път целим директно "popover" елементите (календар и менюта)
 
-# --- 3. CSS ИНЖЕКЦИЯ (ПОДОБРЕНА ЗА ПОЛЕТАТА) ---
 if st.session_state.dark_mode:
-    # === DARK MODE ===
+    # === DARK MODE (ТЪМЕН РЕЖИМ) ===
     st.markdown("""
     <style>
-        /* Основен фон и текст */
+        /* 1. Основни цветове */
         .stApp { background-color: #0E1117 !important; color: #FAFAFA !important; }
         header { background-color: #0E1117 !important; }
         
-        /* Текстове */
-        h1, h2, h3, p, div, span, label { color: #FAFAFA !important; }
+        /* 2. Текстове */
+        h1, h2, h3, p, div, span, label, li { color: #FAFAFA !important; }
         
-        /* Полета за писане (Input fields) - Тъмен фон, бял текст */
+        /* 3. Полета (Inputs) */
         input, select, textarea {
-            color: #FAFAFA !important;
             background-color: #262730 !important;
+            color: #FAFAFA !important;
         }
-        /* Dropdowns и Date Picker контейнери */
-        div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
+        
+        /* 4. Dropdowns и Selectbox кутийки */
+        div[data-baseweb="select"] > div {
             background-color: #262730 !important;
             border-color: #4F4F4F !important;
+            color: #FAFAFA !important;
         }
-        /* Календар текст */
-        div[data-baseweb="calendar"] { background-color: #262730 !important; }
         
+        /* 5. ПОП-ЪПИ: Менюта и Календар (КРИТИЧНО ЗА DARK MODE) */
+        div[data-baseweb="popover"], div[data-baseweb="menu"], div[data-baseweb="calendar"] {
+            background-color: #262730 !important;
+            color: #FAFAFA !important;
+        }
+        
+        /* Опциите в менюто */
+        ul[data-testid="stSelectboxVirtualDropdown"] li {
+            background-color: #262730 !important;
+            color: #FAFAFA !important;
+        }
+        
+        /* Дните в календара */
+        div[data-baseweb="calendar"] button {
+            color: #FAFAFA !important;
+        }
+
         /* Метрики */
         [data-testid="stMetricValue"] { color: #FAFAFA !important; }
     </style>
     """, unsafe_allow_html=True)
+    
 else:
-    # === LIGHT MODE (FORCE) ===
+    # === LIGHT MODE (СВЕТЪЛ РЕЖИМ - FIX) ===
     st.markdown("""
     <style>
-        /* Основен фон и текст */
+        /* 1. Основни цветове */
         .stApp { background-color: #FFFFFF !important; color: #000000 !important; }
         header { background-color: #FFFFFF !important; }
         
-        /* Текстове */
-        h1, h2, h3, p, div, span, label { color: #000000 !important; }
+        /* 2. Текстове - Насилваме черно навсякъде */
+        h1, h2, h3, p, div, span, label, li { color: #000000 !important; }
         
-        /* Полета за писане - Бял фон, Черен текст */
+        /* 3. Полета (Inputs) - Светло сиво */
         input, select, textarea {
-            color: #000000 !important; 
-            background-color: #F0F2F6 !important; 
+            background-color: #F0F2F6 !important;
+            color: #000000 !important;
         }
-        /* Dropdowns и Date Picker */
-        div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
+        
+        /* 4. Dropdowns (Самата кутийка) */
+        div[data-baseweb="select"] > div {
             background-color: #F0F2F6 !important;
             border-color: #D3D3D3 !important;
             color: #000000 !important;
         }
-        /* За да се вижда текста вътре в селектите */
+        /* Текстът в затворено меню */
         div[data-baseweb="select"] span { color: #000000 !important; }
+        
+        /* 5. ПОП-ЪПИ: Менюта и Календар (ТУК БЕШЕ БЪГЪТ) */
+        /* Насилваме белия фон на изскачащите прозорци */
+        div[data-baseweb="popover"] {
+            background-color: #FFFFFF !important;
+            border: 1px solid #D3D3D3 !important;
+        }
+        
+        div[data-baseweb="menu"] {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+        
+        /* Опциите в менюто (списъка) */
+        ul[data-testid="stSelectboxVirtualDropdown"] li {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+        /* Hover ефект за менюто (да се вижда къде е мишката) */
+        ul[data-testid="stSelectboxVirtualDropdown"] li:hover {
+            background-color: #F0F2F6 !important;
+        }
+        
+        /* 6. КАЛЕНДАР FIX */
+        div[data-baseweb="calendar"] {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+        /* Заглавие на месеца и дните */
+        div[data-baseweb="calendar"] div, div[data-baseweb="calendar"] button {
+            color: #000000 !important;
+        }
+        /* Стрелките на календара */
+        div[data-baseweb="calendar"] svg {
+            fill: #000000 !important;
+        }
 
         /* Метрики */
         [data-testid="stMetricValue"] { color: #000000 !important; }
@@ -175,7 +224,7 @@ texts = {
 col_title, col_lang, col_dark = st.columns([6, 1, 1])
 
 with col_lang:
-    # Език бутон - Вече не ползваме callback, а просто четем стойността
+    # Език
     lang_sel = st.selectbox(
         "🌐", 
         ["BG", "EN"], 
@@ -183,13 +232,12 @@ with col_lang:
         label_visibility="collapsed",
         key="lang_select"
     )
-    # Обновяваме state
     if lang_sel != st.session_state.language:
         st.session_state.language = lang_sel
-        st.rerun() # Рестартираме веднага, за да се смени текста
+        st.rerun()
 
 with col_dark:
-    # Dark Mode бутон с Callback (on_change)
+    # Toggle за темата
     st.toggle(
         "🌙", 
         value=st.session_state.dark_mode, 
@@ -199,7 +247,7 @@ with col_dark:
 
 t = texts[st.session_state.language]
 
-# --- 6. СЪДЪРЖАНИЕ НА ПРИЛОЖЕНИЕТО ---
+# --- 6. СЪДЪРЖАНИЕ ---
 
 st.title(t['title'])
 st.caption(t['subtitle'])

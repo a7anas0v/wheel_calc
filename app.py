@@ -8,11 +8,12 @@ st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="ce
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 
-# --- 3. РЕЧНИК С ПРЕВОДИ (FIXED KEY ERROR) ---
+# --- 3. РЕЧНИК С ПРЕВОДИ ---
 texts = {
     'BG': {
         'title': "Wheel Strategy Calculator",
         'subtitle': "Професионален анализ на опции и риск",
+        'choose_strat': "📂 Изберете Стратегия:",
         'tab_put': "🟢 1. Продажба на PUT (Вход)",
         'tab_call': "🔴 2. Продажба на CALL (Изход)",
         'tab_roll': "🔄 3. Ролване (Сценарии)",
@@ -54,7 +55,7 @@ texts = {
         'new_data': "✨ Параметри на Ролването",
         'old_strike': "Текущ Страйк ($)",
         'new_strike': "Нов Страйк ($)",
-        'roll_type': "Тип транзакция:", # <--- ВЪРНАТ ЛИПСВАЩИЯ КЛЮЧ
+        'roll_type': "Тип транзакция:",
         'roll_cost_lbl': "Цена на ролването (Net Price)",
         'roll_credit': "Credit (Взимам)",
         'roll_debit': "Debit (Плащам)",
@@ -77,6 +78,7 @@ texts = {
     'EN': {
         'title': "Wheel Strategy Calculator",
         'subtitle': "Professional Option & Risk Analysis",
+        'choose_strat': "📂 Select Strategy:",
         'tab_put': "🟢 1. Sell PUT (Entry)",
         'tab_call': "🔴 2. Sell CALL (Exit)",
         'tab_roll': "🔄 3. Rolling Logic",
@@ -118,7 +120,7 @@ texts = {
         'new_data': "✨ Roll Parameters",
         'old_strike': "Current Strike ($)",
         'new_strike': "New Strike ($)",
-        'roll_type': "Transaction Type:", # <--- ВЪРНАТ ЛИПСВАЩИЯ КЛЮЧ
+        'roll_type': "Transaction Type:",
         'roll_cost_lbl': "Net Roll Price",
         'roll_credit': "Credit (Receive)",
         'roll_debit': "Debit (Pay)",
@@ -156,13 +158,20 @@ st.caption(t['subtitle'])
 
 today = date.today()
 
-# --- 5. ТАБОВЕ ---
-tab1, tab2, tab3 = st.tabs([t['tab_put'], t['tab_call'], t['tab_roll']])
+# --- 5. ГЛАВНО МЕНЮ (Вертикално за мобилни) ---
+st.write("---")
+# Използваме Radio бутони вместо Tabs, за да са една под друга на телефон
+selected_section = st.radio(
+    t['choose_strat'],
+    [t['tab_put'], t['tab_call'], t['tab_roll']],
+    index=0
+)
+st.write("---")
 
 # ==========================================
-# TAB 1: SELLING PUT
+# SECTION 1: SELLING PUT
 # ==========================================
-with tab1:
+if selected_section == t['tab_put']:
     st.header(t['put_header'])
     col1, col2 = st.columns(2)
     with col1:
@@ -207,9 +216,9 @@ with tab1:
         st.info(f"💰 {t['collateral']}: **${collateral:,.0f}**")
 
 # ==========================================
-# TAB 2: SELLING CALL
+# SECTION 2: SELLING CALL
 # ==========================================
-with tab2:
+elif selected_section == t['tab_call']:
     st.header(t['call_header'])
     col1, col2 = st.columns(2)
     with col1:
@@ -251,9 +260,9 @@ with tab2:
             st.error(f"⚠️ Внимание: Страйкът (${strike_call}) е под вашата цена на купуване (${cost_basis}).")
 
 # ==========================================
-# TAB 3: ROLLING (FULL SCENARIO ANALYSIS)
+# SECTION 3: ROLLING (FULL SCENARIO ANALYSIS)
 # ==========================================
-with tab3:
+elif selected_section == t['tab_roll']:
     st.header(t['roll_header'])
     
     # 1. Избор на стратегия
@@ -284,7 +293,6 @@ with tab3:
         
         new_expiry = st.date_input(t['new_expiry'], value=today, key="new_exp_in")
         
-        # Тук беше грешката, вече е оправена
         roll_type = st.radio(t['roll_type'], (t['roll_credit'], t['roll_debit']), horizontal=True)
         rp_input = st.number_input(t['roll_cost_lbl'], value=None, step=0.01, placeholder="0.00")
         roll_price = rp_input if rp_input is not None else 0.0
@@ -301,13 +309,12 @@ with tab3:
         if days_base <= 0: days_base = 1 
         if days_total <= 0: days_total = 1
         
-        # 1. SCENARIO BASE (Не правите нищо, пазите старата премия и капитал)
+        # 1. SCENARIO BASE
         profit_base = orig_premium
         roi_base = (profit_base / old_strike) * 100
         ann_base = (roi_base / days_base) * 365
         
-        # 2. SCENARIO FAILED ROLL (Лош късмет)
-        # Формулата от вашия пример: (Стара премия - Разход) / Капитал
+        # 2. SCENARIO FAILED ROLL
         net_premium = 0.0
         if roll_type == t['roll_credit']:
             net_premium = orig_premium + roll_price
@@ -318,7 +325,7 @@ with tab3:
         roi_fail = (profit_fail / old_strike) * 100 
         ann_fail = (roi_fail / days_total) * 365
         
-        # 3. SCENARIO SUCCESS (Max Profit)
+        # 3. SCENARIO SUCCESS
         strike_diff = 0.0
         if is_call:
              strike_diff = new_strike - old_strike
@@ -378,12 +385,13 @@ with tab3:
              st.error(t['verdict_bad'])
         else:
              st.info("⚠️ Сделката е неутрална/приемлива.")
+
 # --- FOOTER ---
 st.write("---")
 st.markdown(
     """
     <div style='text-align: center; color: grey;'>
-        <small>Powered by <b>AIVAN Solutions</b> | © 2026 Aivan Capital</small>
+        <small>Powered by <b>AIVAN Solutions</b> | © 2026 VibeSpaces</small>
     </div>
     """, 
     unsafe_allow_html=True

@@ -8,7 +8,7 @@ st.set_page_config(page_title="Wheel Strategy Pro", page_icon="💰", layout="ce
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 
-# --- 3. РЕЧНИК С ПРЕВОДИ ---
+# --- 3. РЕЧНИК С ПРЕВОДИ (FIXED) ---
 texts = {
     'BG': {
         'title': "Wheel Strategy Calculator",
@@ -41,7 +41,7 @@ texts = {
         'total_profit': "ОБЩА потенциална печалба",
         'total_return': "Общ ROI (Total Return)",
         'prem_return': "Доход от Премия",
-        # ROLLING (НОВО)
+        # ROLLING (FIXED MISSING KEYS)
         'roll_header': "Стратегически Анализ на Ролване",
         'roll_strategy': "Каква позиция ролвате?",
         'strat_call': "Covered CALL (Ролване нагоре/напред)",
@@ -49,12 +49,11 @@ texts = {
         'col_curr': "🏦 ТЕКУЩА Позиция (От какво бягате?)",
         'col_new': "✨ НОВА Позиция (Към какво отивате?)",
         'roll_expiry': "Нова дата на падеж",
+        'roll_type': "Тип на транзакцията:",  # <--- ВЪРНАТ ЛИПСВАЩИЯ КЛЮЧ
         'roll_cost_lbl': "Цена на ролването (Net Price)",
         'roll_credit': "Credit (Взимам пари)",
         'roll_debit': "Debit (Плащам пари)",
         'analysis_title': "📊 Сравнителен Анализ",
-        'scenario_now': "Ако НЕ ролнете (Assignment):",
-        'scenario_roll': "Ако РОЛНЕТЕ (New Trade):",
         'metric_cash': "Кеш ефект днес",
         'metric_cap': "Доп. Капиталов Потенциал",
         'metric_total': "Общо Подобрение (Net Economic Value)",
@@ -107,12 +106,11 @@ texts = {
         'col_curr': "🏦 CURRENT Position (From)",
         'col_new': "✨ NEW Position (To)",
         'roll_expiry': "New Expiration Date",
+        'roll_type': "Transaction Type:", # <--- ВЪРНАТ ЛИПСВАЩИЯ КЛЮЧ
         'roll_cost_lbl': "Net Roll Price",
         'roll_credit': "Credit (Receive Cash)",
         'roll_debit': "Debit (Pay Cash)",
         'analysis_title': "📊 Comparative Analysis",
-        'scenario_now': "If you DON'T Roll (Assignment):",
-        'scenario_roll': "If you ROLL (New Trade):",
         'metric_cash': "Immediate Cash Flow",
         'metric_cap': "Added Capital Potential",
         'metric_total': "Total Economic Value",
@@ -270,6 +268,7 @@ with tab3:
     # Данни за самата сделка (Net Price)
     c1, c2 = st.columns([1, 2])
     with c1:
+        # ЕТО ТУК БЕШЕ ГРЕШКАТА - Ключът 'roll_type' сега съществува
         roll_type = st.radio(t['roll_type'], (t['roll_credit'], t['roll_debit']))
     with c2:
         price_in = st.number_input(t['roll_cost_lbl'], value=None, step=0.01, placeholder="0.00")
@@ -303,9 +302,7 @@ with tab3:
         capital_locked = new_strike
         ann_roll_return = 0.0
         if days_roll > 0 and capital_locked > 0:
-             # Ако е кредит: (Price / Capital) annualized
-             # Ако е дебит: (Potential Gain - Cost) / Capital annualized? 
-             # За по-просто, смятаме ROI на "Net Economic Value" върху капитала
+             # ROI на "Net Economic Value" върху капитала
              ann_roll_return = ((total_economic_value / capital_locked) * 100 / days_roll) * 365
 
         # ВИЗУАЛИЗАЦИЯ НА РЕЗУЛТАТИТЕ

@@ -52,7 +52,7 @@ st.markdown("""
         margin-bottom: 30px;
     }
 
-    /* --- БУТОНИ ЗА МЕНЮТО (Tabs) --- */
+    /* --- БУТОНИ ЗА МЕНЮТО --- */
     .stRadio > div[role="radiogroup"] > label > div:first-child {
         display: none;
     }
@@ -94,11 +94,11 @@ st.markdown("""
         transform: translateY(-2px);
     }
 
-    /* ЛЕНТА С ДАННИ */
+    /* ЛЕНТА С ДАННИ (3 items) */
     .ticker-box {
         background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
         border-radius: 12px;
-        padding: 12px 16px;
+        padding: 15px 20px; /* По-голям падинг */
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -107,14 +107,11 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         min-width: 140px;
     }
-    .ticker-box:hover {
-        transform: translateY(-2px);
-        border-color: rgba(56,189,248,0.4);
-    }
-    .ticker-row-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .ticker-symbol { font-size: 0.75rem; font-weight: 800; color: #94a3b8; letter-spacing: 0.1em; }
-    .ticker-price { font-family: 'Inter', monospace; font-size: 1.1rem; font-weight: 700; color: #f8fafc; }
-    .ticker-pill { font-family: monospace; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+    .ticker-row-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .ticker-symbol { font-size: 0.9rem; font-weight: 800; color: #94a3b8; letter-spacing: 0.1em; }
+    .ticker-price { font-family: 'Inter', monospace; font-size: 1.4rem; font-weight: 700; color: #f8fafc; }
+    .ticker-pill { font-family: monospace; font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+    
     .pill-up { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.2); }
     .pill-down { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.2); }
     .pill-neutral { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
@@ -127,14 +124,14 @@ st.markdown("""
         border-radius: 10px;
     }
     
-    /* Специален стил за голямата цена под търсачката */
+    /* Голямата цена под търсачката */
     .big-price-metric div[data-testid="stMetricValue"] {
-        color: #38bdf8 !important; /* Твоят любим син цвят */
+        color: #38bdf8 !important;
         font-size: 1.8rem !important;
         font-weight: 800 !important;
     }
     .big-price-metric div[data-testid="stMetric"] {
-        background-color: transparent !important; /* Без фон за тази конкретна цена */
+        background-color: transparent !important;
         border: none !important;
         padding: 0 !important;
         margin-top: -10px !important;
@@ -142,16 +139,14 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. ФУНКЦИЯ ЗА ЖИВИ ДАННИ (TAPE) ---
+# --- 4. ФУНКЦИЯ ЗА ЖИВИ ДАННИ (САМО 3 ИНДЕКСА) ---
 @st.cache_data(ttl=300)
 def get_live_market_data():
+    # Само най-важните: S&P500, DXY, VIX
     tickers = {
         'S&P 500': '^GSPC',
-        'NASDAQ 100': '^NDX',
-        'VIX (FEAR)': '^VIX',
-        'GOLD': 'GC=F',
-        'CRUDE OIL': 'CL=F',
-        'NAT GAS': 'NG=F'
+        'USD INDEX (DXY)': 'DX-Y.NYB',
+        'VIX (FEAR)': '^VIX'
     }
     live_data = []
     try:
@@ -174,8 +169,9 @@ def get_live_market_data():
                     direction = "up" if change_pct >= 0 else "down"
                     if abs(change_pct) < 0.01: direction = "neutral"
                     
-                    if name == 'VIX (FEAR)': price_fmt = f"{price:.2f}"
-                    else: price_fmt = f"${price:,.2f}"
+                    # Форматиране
+                    if 'VIX' in name or 'DXY' in name: price_fmt = f"{price:.2f}"
+                    else: price_fmt = f"{price:,.2f}"
                         
                     live_data.append({
                         "sym": name, "price": price_fmt, "chg": f"{change_pct:+.2f}%", "dir": direction
@@ -208,10 +204,10 @@ with col_lang:
         st.session_state.language = lang_sel
         st.rerun()
 
-# --- 6. ЛЕНТА С ДАННИ ---
+# --- 6. ЛЕНТА С ДАННИ (3 КОЛОНИ) ---
 market_data = get_live_market_data()
 if market_data:
-    cols = st.columns(len(market_data))
+    cols = st.columns(3) # Разделяме на 3 равни части
     for i, m in enumerate(market_data):
         pill_class = "pill-up" if m['dir'] == "up" else ("pill-down" if m['dir'] == "down" else "pill-neutral")
         arrow = "▲" if m['dir'] == "up" else ("▼" if m['dir'] == "down" else "●")
@@ -386,19 +382,18 @@ selected_section = st.radio(
     label_visibility="collapsed"
 )
 
-# --- 8. ГЛОБАЛЕН TICKER INPUT (ИЗЧИСТЕН ДИЗАЙН) ---
+# --- 8. ГЛОБАЛЕН TICKER INPUT ---
 if 'global_fetched_price' not in st.session_state:
     st.session_state.global_fetched_price = 0.0
 if 'last_ticker' not in st.session_state:
     st.session_state.last_ticker = ""
 
-# Използваме колони с размери [1, 3] за да ограничим ширината
 c_search, c_space = st.columns([1, 2])
 
 with c_search:
     global_ticker = st.text_input(t['global_ticker_label'], key="master_ticker_input", placeholder="e.g. NVDA").upper()
     
-    # ЛОГИКА ЗА ТЪРСЕНЕ
+    # ЛОГИКА ЗА ТЪРСЕНЕ И ОБНОВЯВАНЕ
     if global_ticker:
         if global_ticker != st.session_state.last_ticker:
             try:
@@ -407,12 +402,16 @@ with c_search:
                     current_price = live_data.last_price
                     st.session_state.global_fetched_price = current_price
                     st.session_state.last_ticker = global_ticker
+                    
+                    # === ТУК Е МАГИЯТА: Форсираме обновяване на полетата ===
+                    # Записваме новата цена директно в ключовете на инпутите
+                    st.session_state.put_price_input = current_price
+                    st.session_state.call_cost_input = current_price
+                    st.rerun() # Рестартираме за да се видят промените веднага
             except:
                 st.warning("Not found")
         
-        # ПОКАЗВАНЕ НА ЦЕНАТА ПОД ПОЛЕТО
         if st.session_state.global_fetched_price > 0:
-            # Използваме контейнер с клас big-price-metric за CSS стилизация
             st.markdown('<div class="big-price-metric">', unsafe_allow_html=True)
             st.metric(label="Price", value=f"${st.session_state.global_fetched_price:,.2f}", label_visibility="collapsed")
             st.markdown('</div>', unsafe_allow_html=True)
@@ -426,9 +425,8 @@ if selected_section == t['tab_put']:
     st.header(t['put_header'])
     col1, col2 = st.columns(2)
     with col1:
-        default_price = st.session_state.global_fetched_price if st.session_state.global_fetched_price > 0 else 0.0
-        
-        cp_input = st.number_input(t['current_price'], value=default_price, step=0.10, placeholder="0.00", key="put_price_input")
+        # Използваме key, за да може да се обновява от глобалния инпут
+        cp_input = st.number_input(t['current_price'], value=0.0, step=0.10, placeholder="0.00", key="put_price_input")
         strike_input = st.number_input(t['strike'], value=None, step=0.5, placeholder="0.00")
         current_price = cp_input if cp_input is not None else 0.0
         strike = strike_input if strike_input is not None else 0.0
@@ -475,9 +473,7 @@ elif selected_section == t['tab_call']:
     st.header(t['call_header'])
     col1, col2 = st.columns(2)
     with col1:
-        default_cost = st.session_state.global_fetched_price if st.session_state.global_fetched_price > 0 else 0.0
-        
-        cb_input = st.number_input(t['cost_basis'], value=default_cost, step=0.10, help="Вашата средна цена", placeholder="0.00", key="call_cost_input")
+        cb_input = st.number_input(t['cost_basis'], value=0.0, step=0.10, help="Вашата средна цена", placeholder="0.00", key="call_cost_input")
         strike_call_input = st.number_input(t['strike'], value=None, step=0.5, key="call_strike", placeholder="0.00")
         cost_basis = cb_input if cb_input is not None else 0.0
         strike_call = strike_call_input if strike_call_input is not None else 0.0
@@ -633,8 +629,6 @@ elif selected_section == t['tab_roll']:
 elif selected_section == t['tab_data']:
     st.header(t['md_header'])
     
-    # ТУК МАХНАХМЕ ВТОРОТО ПОЛЕ ЗА ТЪРСЕНЕ.
-    # Взимаме тикера директно от глобалното поле (st.session_state.last_ticker)
     ticker_symbol = st.session_state.last_ticker
     
     if not ticker_symbol:

@@ -94,16 +94,6 @@ st.markdown("""
         transform: translateY(-2px);
     }
 
-    /* СТИЛ ЗА GLOBAL TICKER INPUT */
-    .ticker-input-container {
-        background-color: rgba(30, 41, 59, 0.4);
-        padding: 15px;
-        border-radius: 12px;
-        border: 1px solid rgba(56, 189, 248, 0.2);
-        margin-top: 10px;
-        margin-bottom: 20px;
-    }
-
     /* ЛЕНТА С ДАННИ */
     .ticker-box {
         background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
@@ -129,11 +119,25 @@ st.markdown("""
     .pill-down { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.2); }
     .pill-neutral { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
 
+    /* СТИЛИЗАЦИЯ НА МЕТРИКИТЕ И ЦЕНАТА */
     div[data-testid="stMetric"] {
         background-color: rgba(30, 41, 59, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.05);
         padding: 15px;
         border-radius: 10px;
+    }
+    
+    /* Специален стил за голямата цена под търсачката */
+    .big-price-metric div[data-testid="stMetricValue"] {
+        color: #38bdf8 !important; /* Твоят любим син цвят */
+        font-size: 1.8rem !important;
+        font-weight: 800 !important;
+    }
+    .big-price-metric div[data-testid="stMetric"] {
+        background-color: transparent !important; /* Без фон за тази конкретна цена */
+        border: none !important;
+        padding: 0 !important;
+        margin-top: -10px !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -230,7 +234,7 @@ st.write("---")
 texts = {
     'BG': {
         'choose_strat': "Модул:",
-        'global_ticker_label': "⚡ Търси Акция (Въведи Тикер за Авто-Цена):",
+        'global_ticker_label': "Въведи Тикер (напр. NVDA):",
         'tab_put': "PUT (Вход)",
         'tab_call': "CALL (Изход)",
         'tab_roll': "Ролване",
@@ -286,7 +290,7 @@ texts = {
         'risk_text_3': "за да гоните потенциал за",
         'verdict_great': "✅ ОТЛИЧНО: Малък риск за голяма награда.",
         'verdict_bad': "🛑 НЕ СИ СТРУВА: Рискувате твърде много доходност.",
-        'md_header': "📡 Пазарни Данни & Верига Опции",
+        'md_header': "📡 Верига Опции (Live Option Chain)",
         'md_input_lbl': "Въведете Тикер (Yahoo Finance Symbol):",
         'md_note': "ℹ️ Бележка: Данните са с ~15 мин закъснение.",
         'md_note_ex': "Примери: 'TSLA', 'AAPL'. За канадски акции добавете '.TO'",
@@ -300,7 +304,7 @@ texts = {
     },
     'EN': {
         'choose_strat': "Module:",
-        'global_ticker_label': "⚡ Search Ticker (Auto-Populate Price):",
+        'global_ticker_label': "Enter Ticker (e.g. NVDA):",
         'tab_put': "PUT (Entry)",
         'tab_call': "CALL (Exit)",
         'tab_roll': "Rolling",
@@ -356,7 +360,7 @@ texts = {
         'risk_text_3': "to chase a potential",
         'verdict_great': "✅ GREAT TRADE: Low risk for high reward.",
         'verdict_bad': "🛑 BAD DEAL: Giving up too much yield.",
-        'md_header': "📡 Market Data & Option Chain",
+        'md_header': "📡 Live Option Chain",
         'md_input_lbl': "Enter Ticker (Yahoo Finance Symbol):",
         'md_note': "ℹ️ Note: Data is delayed by ~15 mins.",
         'md_note_ex': "Examples: 'TSLA', 'AAPL'. For Canadian stocks try adding '.TO'",
@@ -373,7 +377,7 @@ texts = {
 t = texts[st.session_state.language]
 today = date.today()
 
-# --- ГЛАВНО МЕНЮ (РАДИО) ---
+# --- ГЛАВНО МЕНЮ ---
 selected_section = st.radio(
     t['choose_strat'],
     [t['tab_put'], t['tab_call'], t['tab_roll'], t['tab_data']],
@@ -382,38 +386,36 @@ selected_section = st.radio(
     label_visibility="collapsed"
 )
 
-# --- 8. ГЛОБАЛЕН TICKER INPUT (НОВО) ---
-# Инициализация на Session State за цената
+# --- 8. ГЛОБАЛЕН TICKER INPUT (ИЗЧИСТЕН ДИЗАЙН) ---
 if 'global_fetched_price' not in st.session_state:
     st.session_state.global_fetched_price = 0.0
 if 'last_ticker' not in st.session_state:
     st.session_state.last_ticker = ""
 
-# Визуална кутия за търсене
-st.markdown('<div class="ticker-input-container">', unsafe_allow_html=True)
-c_search, c_display = st.columns([1, 1])
+# Използваме колони с размери [1, 3] за да ограничим ширината
+c_search, c_space = st.columns([1, 2])
 
 with c_search:
     global_ticker = st.text_input(t['global_ticker_label'], key="master_ticker_input", placeholder="e.g. NVDA").upper()
-
-with c_display:
+    
+    # ЛОГИКА ЗА ТЪРСЕНЕ
     if global_ticker:
-        # Проверяваме дали е нов тикер, за да изтеглим цената
         if global_ticker != st.session_state.last_ticker:
             try:
-                with st.spinner("⏳"):
+                with st.spinner("Wait..."):
                     live_data = yf.Ticker(global_ticker).fast_info
                     current_price = live_data.last_price
                     st.session_state.global_fetched_price = current_price
                     st.session_state.last_ticker = global_ticker
             except:
-                st.warning("Ticker not found")
+                st.warning("Not found")
         
-        # Показваме цената, ако я имаме
+        # ПОКАЗВАНЕ НА ЦЕНАТА ПОД ПОЛЕТО
         if st.session_state.global_fetched_price > 0:
-            st.markdown(f"<h3 style='margin:0; color:#38bdf8;'>${st.session_state.global_fetched_price:,.2f}</h3>", unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
+            # Използваме контейнер с клас big-price-metric за CSS стилизация
+            st.markdown('<div class="big-price-metric">', unsafe_allow_html=True)
+            st.metric(label="Price", value=f"${st.session_state.global_fetched_price:,.2f}", label_visibility="collapsed")
+            st.markdown('</div>', unsafe_allow_html=True)
 
 st.write("---")
 
@@ -424,13 +426,7 @@ if selected_section == t['tab_put']:
     st.header(t['put_header'])
     col1, col2 = st.columns(2)
     with col1:
-        # Използваме глобалната цена като 'value', ако съществува.
-        # Streamlit позволява промяна на стойността, дори ако е зададена с value.
         default_price = st.session_state.global_fetched_price if st.session_state.global_fetched_price > 0 else 0.0
-        
-        # ВАЖНО: Използваме 'value' аргумента. Ако потребителят промени числото, Streamlit го запомня в key.
-        # За да се обнови при нов тикер, използваме key, който зависи от тикера, или просто разчитаме на rerender
-        # Най-добрият начин за "default but modifiable" в Streamlit е да се подаде value само при първоначално зареждане или промяна
         
         cp_input = st.number_input(t['current_price'], value=default_price, step=0.10, placeholder="0.00", key="put_price_input")
         strike_input = st.number_input(t['strike'], value=None, step=0.5, placeholder="0.00")
@@ -479,7 +475,6 @@ elif selected_section == t['tab_call']:
     st.header(t['call_header'])
     col1, col2 = st.columns(2)
     with col1:
-        # Тук също използваме глобалната цена за 'Cost Basis', ако потребителят иска да анализира нова позиция
         default_cost = st.session_state.global_fetched_price if st.session_state.global_fetched_price > 0 else 0.0
         
         cb_input = st.number_input(t['cost_basis'], value=default_cost, step=0.10, help="Вашата средна цена", placeholder="0.00", key="call_cost_input")
@@ -633,46 +628,38 @@ elif selected_section == t['tab_roll']:
              st.info("⚠️ Сделката е неутрална/приемлива.")
 
 # ==========================================
-# SECTION 4: MARKET DATA (LEGACY TAB)
+# SECTION 4: MARKET DATA (CLEANED UP)
 # ==========================================
 elif selected_section == t['tab_data']:
     st.header(t['md_header'])
     
-    st.info(f"{t['md_note']}\n\n{t['md_note_ex']}")
+    # ТУК МАХНАХМЕ ВТОРОТО ПОЛЕ ЗА ТЪРСЕНЕ.
+    # Взимаме тикера директно от глобалното поле (st.session_state.last_ticker)
+    ticker_symbol = st.session_state.last_ticker
     
-    # Тъй като вече имаме глобален инпут, тук може да оставим локален за детайлни данни
-    ticker_symbol = st.text_input(t['md_input_lbl'], value=st.session_state.last_ticker).upper()
-    
-    if ticker_symbol:
+    if not ticker_symbol:
+        st.info("⬅️ Моля, въведете тикер в полето най-горе, за да заредите данни.")
+    else:
         try:
             stock = yf.Ticker(ticker_symbol)
-            info = stock.info
-            current_live_price = info.get('regularMarketPrice', info.get('currentPrice', None))
+            # Взимаме опциите
+            expirations = stock.options
             
-            if current_live_price:
-                st.metric(t['md_price'], f"${current_live_price:.2f}")
+            if expirations:
+                c1, c2 = st.columns(2)
+                with c1:
+                    sel_exp = st.selectbox(t['md_exp'], expirations)
+                with c2:
+                    opt_type = st.radio(t['md_type'], ["Put", "Call"], horizontal=True)
                 
-                st.divider()
-                st.subheader(t['md_chain_head'])
-                
-                expirations = stock.options
-                if expirations:
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        sel_exp = st.selectbox(t['md_exp'], expirations)
-                    with c2:
-                        opt_type = st.radio(t['md_type'], ["Put", "Call"], horizontal=True)
+                if sel_exp:
+                    opt_chain = stock.option_chain(sel_exp)
+                    data = opt_chain.puts if opt_type == "Put" else opt_chain.calls
                     
-                    if sel_exp:
-                        opt_chain = stock.option_chain(sel_exp)
-                        data = opt_chain.puts if opt_type == "Put" else opt_chain.calls
-                        
-                        df_show = data[['strike', 'lastPrice', 'bid', 'ask', 'volume', 'openInterest']]
-                        st.dataframe(df_show, hide_index=True, use_container_width=True)
-                else:
-                    st.warning(t['md_no_data'])
+                    df_show = data[['strike', 'lastPrice', 'bid', 'ask', 'volume', 'openInterest']]
+                    st.dataframe(df_show, hide_index=True, use_container_width=True)
             else:
-                st.warning(f"Не мога да намеря цена за: {ticker_symbol}. Проверете дали тикерът е правилен в Yahoo Finance.")
+                st.warning(t['md_no_data'])
         except Exception as e:
             st.error(f"{t['md_error']} ({e})")
 

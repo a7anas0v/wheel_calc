@@ -15,7 +15,7 @@ st.set_page_config(
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 
-# --- 3. ДИЗАЙН И CSS (ОБНОВЕН ЗА МОБИЛНИ УСТРОЙСТВА) ---
+# --- 3. ДИЗАЙН И CSS (С ФИКС ЗА КЛАВИАТУРАТА) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -28,6 +28,12 @@ st.markdown("""
     .stApp {
         background-color: #020617;
         color: #f8fafc;
+    }
+    
+    /* --- MOBILE KEYBOARD FIX --- */
+    /* Добавяме празно място отдолу, за да може екрана да се вдига над клавиатурата */
+    .main .block-container {
+        padding-bottom: 350px !important;
     }
 
     /* ЛОГО И ЗАГЛАВИЕ */
@@ -48,59 +54,50 @@ st.markdown("""
     }
 
     /* --- НОВИ БУТОНИ ЗА МЕНЮТО (Mobile Friendly) --- */
-    
-    /* Скриваме стандартните радио кръгчета */
     .stRadio > div[role="radiogroup"] > label > div:first-child {
         display: none;
     }
-    
-    /* Контейнер на бутоните */
     .stRadio > div[role="radiogroup"] {
         display: flex;
-        flex-wrap: wrap; /* ВАЖНО: Позволява пренасяне на нов ред при тесен екран */
-        gap: 12px; /* Разстояние между бутоните */
-        background-color: transparent; /* Без общ фон */
+        flex-wrap: wrap; 
+        gap: 10px;
+        background-color: transparent;
         padding: 0;
         border: none;
-        justify-content: flex-start; /* Подравняване наляво (или center) */
+        justify-content: flex-start;
     }
-    
-    /* Самите бутони (етикети) */
     .stRadio > div[role="radiogroup"] > label {
-        flex: 1 1 auto; /* Гъвкав размер, но може да се свива/разширява */
-        min-width: 140px; /* Минимална ширина, за да не се мачка текста */
+        flex: 1 1 auto;
+        min-width: 130px;
         text-align: center;
-        padding: 14px 20px;
-        background-color: rgba(30, 41, 59, 0.6); /* Тъмен фон за всеки бутон */
+        padding: 12px 15px;
+        background-color: rgba(30, 41, 59, 0.6);
         border-radius: 10px;
         cursor: pointer;
         font-weight: 700;
         color: #94a3b8;
         border: 1px solid rgba(255, 255, 255, 0.05);
         transition: all 0.2s ease;
-        white-space: nowrap; /* Текстът никога да не става вертикален */
+        white-space: nowrap;
         display: flex;
         align-items: center;
         justify-content: center;
     }
-    
-    /* Ховър ефект */
     .stRadio > div[role="radiogroup"] > label:hover {
         background-color: rgba(56, 189, 248, 0.1);
         color: #f8fafc;
         border-color: rgba(56, 189, 248, 0.3);
     }
-    
-    /* АКТИВЕН БУТОН (Натиснат) - Ясна индикация */
+    /* АКТИВЕН БУТОН */
     .stRadio > div[role="radiogroup"] > label[data-checked="true"] {
         background: linear-gradient(135deg, rgba(56, 189, 248, 0.8), rgba(192, 132, 252, 0.8));
         color: #ffffff;
         border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); /* Светещ ефект */
-        transform: translateY(-2px); /* Леко повдигане */
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        transform: translateY(-2px);
     }
 
-    /* ЛЕНТА С ДАННИ (TICKER TAPE) */
+    /* ЛЕНТА С ДАННИ */
     .ticker-box {
         background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
         border-radius: 12px;
@@ -111,18 +108,16 @@ st.markdown("""
         border: 1px solid rgba(255,255,255,0.08);
         transition: transform 0.2s ease, border-color 0.2s;
         box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        min-width: 140px; /* За да не се смачкват на телефон */
+        min-width: 140px;
     }
     .ticker-box:hover {
         transform: translateY(-2px);
         border-color: rgba(56,189,248,0.4);
     }
-    
     .ticker-row-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
     .ticker-symbol { font-size: 0.75rem; font-weight: 800; color: #94a3b8; letter-spacing: 0.1em; }
     .ticker-price { font-family: 'Inter', monospace; font-size: 1.1rem; font-weight: 700; color: #f8fafc; }
     .ticker-pill { font-family: monospace; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
-    
     .pill-up { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.2); }
     .pill-down { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.2); }
     .pill-neutral { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
@@ -183,7 +178,7 @@ def get_live_market_data():
         pass
     return live_data
 
-# --- 5. HEADER (ЗАГЛАВИЕ & ЕЗИК) ---
+# --- 5. HEADER ---
 today_str = datetime.now().strftime("%b %d, %Y").upper()
 
 col_brand, col_lang = st.columns([5, 1])

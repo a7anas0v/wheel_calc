@@ -5,13 +5,17 @@ import pandas as pd
 
 # --- 1. КОНФИГУРАЦИЯ ---
 st.set_page_config(
-    page_title="Aivan Capital | Strategy Terminal",
+    page_title="Aivan Capital | The Wheel Pro",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. ДИЗАЙН И CSS (BRANDING + TICKER TAPE) ---
+# --- 2. УПРАВЛЕНИЕ НА ЕЗИКА (Първо, за да го ползваме в UI) ---
+if 'language' not in st.session_state:
+    st.session_state.language = 'BG'
+
+# --- 3. ДИЗАЙН И CSS ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -37,10 +41,53 @@ st.markdown("""
         color: #64748b;
         font-size: 11px;
         font-weight: 700;
-        letter-spacing: 0.4em;
+        letter-spacing: 0.2em;
         text-transform: uppercase;
         margin-top: -15px;
         margin-bottom: 30px;
+    }
+
+    /* --- СТИЛ ЗА БУТОНИТЕ НА МЕНЮТО (Modern Tabs) --- */
+    /* Скриваме стандартните кръгчета */
+    .stRadio > div[role="radiogroup"] > label > div:first-child {
+        display: none;
+    }
+    /* Контейнер на бутоните */
+    .stRadio > div[role="radiogroup"] {
+        display: flex;
+        gap: 10px;
+        background-color: rgba(30, 41, 59, 0.5);
+        padding: 5px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        justify-content: center; /* Центриране на бутоните */
+    }
+    /* Самите бутони (етикети) */
+    .stRadio > div[role="radiogroup"] > label {
+        flex: 1;
+        text-align: center;
+        padding: 12px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        color: #94a3b8;
+        border: 1px solid transparent;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    /* Ховър ефект */
+    .stRadio > div[role="radiogroup"] > label:hover {
+        background-color: rgba(56, 189, 248, 0.1);
+        color: #f8fafc;
+    }
+    /* АКТИВЕН БУТОН */
+    .stRadio > div[role="radiogroup"] > label[data-checked="true"] {
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(192, 132, 252, 0.2));
+        color: #ffffff;
+        border: 1px solid rgba(56, 189, 248, 0.5);
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
     }
 
     /* ЛЕНТА С ДАННИ (TICKER TAPE) */
@@ -76,15 +123,10 @@ st.markdown("""
         padding: 15px;
         border-radius: 10px;
     }
-    .stRadio > div {
-        flex-direction: row; 
-        gap: 20px;
-        overflow-x: auto;
-    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. ФУНКЦИЯ ЗА ЖИВИ ДАННИ ---
+# --- 4. ФУНКЦИЯ ЗА ЖИВИ ДАННИ ---
 @st.cache_data(ttl=300)
 def get_live_market_data():
     tickers = {
@@ -100,7 +142,6 @@ def get_live_market_data():
         data = yf.download(list(tickers.values()), period="2d", progress=False)['Close']
         for name, symbol in tickers.items():
             try:
-                # Обработка на данните
                 if isinstance(data, pd.DataFrame) and symbol in data.columns:
                     series = data[symbol].dropna()
                 else:
@@ -131,24 +172,29 @@ def get_live_market_data():
         pass
     return live_data
 
-# --- 4. HEADER ---
+# --- 5. HEADER (ЗАГЛАВИЕ & ЕЗИК ГОРЕ ВДЯСНО) ---
 today_str = datetime.now().strftime("%b %d, %Y").upper()
 
-col_brand, col_powered = st.columns([4, 1])
+col_brand, col_lang = st.columns([5, 1])
+
 with col_brand:
     st.markdown(f"""
-        <h1 style="font-size: 3.5rem; margin-bottom: -5px; font-style: italic; line-height: 1.2;">
-            AIVAN <span class="gradient-text">CAPITAL</span>
-        </h1>
-        <p class="brand-sub">GLOBAL MACRO STRATEGY TERMINAL | {today_str}</p>
+        <div>
+            <h1 style="font-size: 3.5rem; margin-bottom: -5px; font-style: italic; line-height: 1.2;">
+                AIVAN <span class="gradient-text">CAPITAL</span>
+            </h1>
+            <p class="brand-sub">THE WHEEL PRO STRATEGY TERMINAL | {today_str}</p>
+        </div>
     """, unsafe_allow_html=True)
 
-with col_powered:
-    st.write("")
-    st.write("")
-    st.markdown('<div style="text-align: right; border: 1px solid #38bdf8; border-radius: 20px; padding: 5px 15px; color: #38bdf8; font-size: 10px; font-weight: 900; letter-spacing: 1px; display: inline-block; float: right;">POWERED BY AIVAN SOLUTIONS</div>', unsafe_allow_html=True)
+with col_lang:
+    # Езикът е преместен тук, горе вдясно
+    lang_sel = st.selectbox("Language", ["BG", "EN"], index=0 if st.session_state.language=='BG' else 1, label_visibility="collapsed", key="lang_select_top")
+    if lang_sel != st.session_state.language:
+        st.session_state.language = lang_sel
+        st.rerun()
 
-# --- 5. ЛЕНТА С ДАННИ ---
+# --- 6. ЛЕНТА С ДАННИ ---
 market_data = get_live_market_data()
 if market_data:
     cols = st.columns(len(market_data))
@@ -170,25 +216,18 @@ else:
 
 st.write("---")
 
-# --- 6. WHEEL CALCULATOR ---
-
-# Управление на езика
-if 'language' not in st.session_state:
-    st.session_state.language = 'BG'
+# --- 7. WHEEL CALCULATOR ---
 
 if 'fetched_price' not in st.session_state:
     st.session_state.fetched_price = None
 
-# РЕЧНИК
 texts = {
     'BG': {
-        'title': "Wheel Strategy Calculator",
-        'subtitle': "Професионален анализ на опции и риск",
-        'choose_strat': "📂 Изберете Раздел:",
-        'tab_put': "🟢 1. Продажба на PUT (Вход)",
-        'tab_call': "🔴 2. Продажба на CALL (Изход)",
-        'tab_roll': "🔄 3. Ролване (Сценарии)",
-        'tab_data': "🔎 4. Пазарни Данни (Live)",
+        'choose_strat': "📂 Изберете Модул:",
+        'tab_put': "PUT (Вход)",
+        'tab_call': "CALL (Изход)",
+        'tab_roll': "Ролване",
+        'tab_data': "Пазарни Данни",
         'md_header': "📡 Пазарни Данни & Верига Опции",
         'md_input_lbl': "Въведете Тикер (Yahoo Finance Symbol):",
         'md_note': "ℹ️ Бележка: Данните са с ~15 мин закъснение.",
@@ -253,13 +292,11 @@ texts = {
         'verdict_bad': "🛑 НЕ СИ СТРУВА: Рискувате твърде много доходност."
     },
     'EN': {
-        'title': "Wheel Strategy Calculator",
-        'subtitle': "Professional Option & Risk Analysis",
-        'choose_strat': "📂 Select Section:",
-        'tab_put': "🟢 1. Sell PUT (Entry)",
-        'tab_call': "🔴 2. Sell CALL (Exit)",
-        'tab_roll': "🔄 3. Rolling Logic",
-        'tab_data': "🔎 4. Market Data (Live)",
+        'choose_strat': "📂 Select Module:",
+        'tab_put': "PUT (Entry)",
+        'tab_call': "CALL (Exit)",
+        'tab_roll': "Rolling",
+        'tab_data': "Market Data",
         'md_header': "📡 Market Data & Option Chain",
         'md_input_lbl': "Enter Ticker (Yahoo Finance Symbol):",
         'md_note': "ℹ️ Note: Data is delayed by ~15 mins.",
@@ -325,23 +362,16 @@ texts = {
     }
 }
 
-# Избор на език
-col_spacer, col_lang = st.columns([6, 1])
-with col_lang:
-    lang_sel = st.selectbox("🌐 Language", ["BG", "EN"], index=0 if st.session_state.language=='BG' else 1, label_visibility="collapsed", key="lang_select")
-    if lang_sel != st.session_state.language:
-        st.session_state.language = lang_sel
-        st.rerun()
-
 t = texts[st.session_state.language]
 today = date.today()
 
-# ГЛАВНО МЕНЮ (РАДИО)
+# ГЛАВНО МЕНЮ (Модерни бутони)
 selected_section = st.radio(
     t['choose_strat'],
     [t['tab_put'], t['tab_call'], t['tab_roll'], t['tab_data']],
     index=0,
-    horizontal=True
+    horizontal=True,
+    label_visibility="collapsed"
 )
 st.write("---")
 
@@ -558,13 +588,11 @@ elif selected_section == t['tab_data']:
         try:
             stock = yf.Ticker(ticker_symbol)
             info = stock.info
-            # Опитваме се да хванем цена от различни полета
             current_live_price = info.get('regularMarketPrice', info.get('currentPrice', None))
             
             if current_live_price:
                 st.metric(t['md_price'], f"${current_live_price:.2f}")
                 
-                # Бутон за копиране
                 if st.button(t['md_btn_copy']):
                     st.session_state.fetched_price = current_live_price
                     st.success("Цената е запазена! Отидете в таб 1 или 2, за да я видите.")
@@ -584,7 +612,6 @@ elif selected_section == t['tab_data']:
                         opt_chain = stock.option_chain(sel_exp)
                         data = opt_chain.puts if opt_type == "Put" else opt_chain.calls
                         
-                        # Форматиране на таблицата
                         df_show = data[['strike', 'lastPrice', 'bid', 'ask', 'volume', 'openInterest']]
                         st.dataframe(df_show, hide_index=True, use_container_width=True)
                 else:

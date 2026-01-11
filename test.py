@@ -7,7 +7,7 @@ import pandas as pd
 st.set_page_config(
     page_title="Aivan Capital | The Wheel Pro",
     page_icon="💎",
-    layout="wide",
+    layout="centered", # ПРОМЯНА: Върнато на centered (по подразбиране)
     initial_sidebar_state="collapsed"
 )
 
@@ -63,13 +63,13 @@ st.markdown("""
         background-color: transparent;
         padding: 0;
         border: none;
-        justify-content: flex-start;
+        justify-content: center; /* Центрирани бутони при centered layout */
     }
     .stRadio > div[role="radiogroup"] > label {
         flex: 1 1 auto;
-        min-width: 130px;
+        min-width: 100px; /* Малко по-компактни за centered layout */
         text-align: center;
-        padding: 12px 15px;
+        padding: 10px 12px;
         background-color: rgba(30, 41, 59, 0.6);
         border-radius: 10px;
         cursor: pointer;
@@ -80,6 +80,7 @@ st.markdown("""
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 0.9rem;
     }
     .stRadio > div[role="radiogroup"] > label:hover {
         background-color: rgba(56, 189, 248, 0.1);
@@ -94,29 +95,29 @@ st.markdown("""
         transform: translateY(-2px);
     }
 
-    /* ЛЕНТА С ДАННИ (3 items) */
+    /* ЛЕНТА С ДАННИ (Компактна за centered) */
     .ticker-box {
         background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
         border-radius: 12px;
-        padding: 15px 20px; /* По-голям падинг */
+        padding: 12px 15px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         border: 1px solid rgba(255,255,255,0.08);
         transition: transform 0.2s ease, border-color 0.2s;
         box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        min-width: 140px;
+        min-width: 100px;
     }
-    .ticker-row-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .ticker-symbol { font-size: 0.9rem; font-weight: 800; color: #94a3b8; letter-spacing: 0.1em; }
-    .ticker-price { font-family: 'Inter', monospace; font-size: 1.4rem; font-weight: 700; color: #f8fafc; }
-    .ticker-pill { font-family: monospace; font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+    .ticker-row-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .ticker-symbol { font-size: 0.8rem; font-weight: 800; color: #94a3b8; letter-spacing: 0.05em; }
+    .ticker-price { font-family: 'Inter', monospace; font-size: 1.2rem; font-weight: 700; color: #f8fafc; }
+    .ticker-pill { font-family: monospace; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
     
     .pill-up { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.2); }
     .pill-down { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.2); }
     .pill-neutral { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
 
-    /* СТИЛИЗАЦИЯ НА МЕТРИКИТЕ И ЦЕНАТА */
+    /* СТИЛИЗАЦИЯ НА МЕТРИКИТЕ */
     div[data-testid="stMetric"] {
         background-color: rgba(30, 41, 59, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.05);
@@ -139,14 +140,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. ФУНКЦИЯ ЗА ЖИВИ ДАННИ (САМО 3 ИНДЕКСА) ---
+# --- 4. ФУНКЦИЯ ЗА ЖИВИ ДАННИ (USD/EUR + VIX) ---
 @st.cache_data(ttl=300)
 def get_live_market_data():
-    # Само най-важните: S&P500, DXY, VIX
     tickers = {
         'S&P 500': '^GSPC',
-        'USD INDEX (DXY)': 'DX-Y.NYB',
-        'VIX (FEAR)': '^VIX'
+        'USD/EUR': 'EUR=X', # ПРОМЯНА: Долар спрямо Евро
+        'VIX': '^VIX'       # ПРОМЯНА: Махнахме "(FEAR)"
     }
     live_data = []
     try:
@@ -170,7 +170,7 @@ def get_live_market_data():
                     if abs(change_pct) < 0.01: direction = "neutral"
                     
                     # Форматиране
-                    if 'VIX' in name or 'DXY' in name: price_fmt = f"{price:.2f}"
+                    if 'VIX' in name or 'USD' in name: price_fmt = f"{price:.2f}"
                     else: price_fmt = f"{price:,.2f}"
                         
                     live_data.append({
@@ -207,7 +207,7 @@ with col_lang:
 # --- 6. ЛЕНТА С ДАННИ (3 КОЛОНИ) ---
 market_data = get_live_market_data()
 if market_data:
-    cols = st.columns(3) # Разделяме на 3 равни части
+    cols = st.columns(3)
     for i, m in enumerate(market_data):
         pill_class = "pill-up" if m['dir'] == "up" else ("pill-down" if m['dir'] == "down" else "pill-neutral")
         arrow = "▲" if m['dir'] == "up" else ("▼" if m['dir'] == "down" else "●")
@@ -388,7 +388,8 @@ if 'global_fetched_price' not in st.session_state:
 if 'last_ticker' not in st.session_state:
     st.session_state.last_ticker = ""
 
-c_search, c_space = st.columns([1, 2])
+# За Centered Layout разпределяме мястото по-равномерно
+c_search, c_space = st.columns([1, 1]) # 50/50
 
 with c_search:
     global_ticker = st.text_input(t['global_ticker_label'], key="master_ticker_input", placeholder="e.g. NVDA").upper()
@@ -403,11 +404,10 @@ with c_search:
                     st.session_state.global_fetched_price = current_price
                     st.session_state.last_ticker = global_ticker
                     
-                    # === ТУК Е МАГИЯТА: Форсираме обновяване на полетата ===
-                    # Записваме новата цена директно в ключовете на инпутите
+                    # === Форсираме обновяване на полетата ===
                     st.session_state.put_price_input = current_price
                     st.session_state.call_cost_input = current_price
-                    st.rerun() # Рестартираме за да се видят промените веднага
+                    st.rerun() 
             except:
                 st.warning("Not found")
         

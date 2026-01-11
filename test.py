@@ -3,7 +3,7 @@ from datetime import date, datetime
 import yfinance as yf
 import pandas as pd
 
-# --- 1. КОНФИГУРАЦИЯ (Смених на WIDE за по-добър изглед на лентата) ---
+# --- 1. КОНФИГУРАЦИЯ ---
 st.set_page_config(
     page_title="Aivan Capital | Strategy Terminal",
     page_icon="💎",
@@ -22,11 +22,11 @@ st.markdown("""
 
     /* Основен тъмен фон */
     .stApp {
-        background-color: #020617; /* Тъмно синьо/черно */
+        background-color: #020617;
         color: #f8fafc;
     }
 
-    /* --- ЛОГО И ЗАГЛАВИЕ --- */
+    /* ЛОГО И ЗАГЛАВИЕ */
     .gradient-text {
         background: linear-gradient(45deg, #38bdf8, #818cf8, #c084fc);
         -webkit-background-clip: text;
@@ -43,7 +43,7 @@ st.markdown("""
         margin-bottom: 30px;
     }
 
-    /* --- ЛЕНТА С ДАННИ (TICKER TAPE) --- */
+    /* ЛЕНТА С ДАННИ (TICKER TAPE) */
     .ticker-box {
         background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
         border-radius: 12px;
@@ -69,14 +69,13 @@ st.markdown("""
     .pill-down { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.2); }
     .pill-neutral { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
 
-    /* --- СТИЛИЗАЦИЯ НА КАЛКУЛАТОРА --- */
+    /* СТИЛИЗАЦИЯ НА КАЛКУЛАТОРА */
     div[data-testid="stMetric"] {
         background-color: rgba(30, 41, 59, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.05);
         padding: 15px;
         border-radius: 10px;
     }
-    /* Подравняване на радио бутоните */
     .stRadio > div {
         flex-direction: row; 
         gap: 20px;
@@ -132,7 +131,7 @@ def get_live_market_data():
         pass
     return live_data
 
-# --- 4. HEADER (ВИЗУАЛНА ЧАСТ) ---
+# --- 4. HEADER ---
 today_str = datetime.now().strftime("%b %d, %Y").upper()
 
 col_brand, col_powered = st.columns([4, 1])
@@ -171,19 +170,16 @@ else:
 
 st.write("---")
 
-# =========================================================
-#  ОТ ТУК НАДОЛУ Е ТВОЯТ ОРИГИНАЛЕН WHEEL.PY КОД
-#  (С малки корекции за да пасне на новия layout)
-# =========================================================
+# --- 6. WHEEL CALCULATOR ---
 
-# --- УПРАВЛЕНИЕ НА ЕЗИКА ---
+# Управление на езика
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 
 if 'fetched_price' not in st.session_state:
     st.session_state.fetched_price = None
 
-# --- РЕЧНИК С ПРЕВОДИ ---
+# РЕЧНИК
 texts = {
     'BG': {
         'title': "Wheel Strategy Calculator",
@@ -195,8 +191,8 @@ texts = {
         'tab_data': "🔎 4. Пазарни Данни (Live)",
         'md_header': "📡 Пазарни Данни & Верига Опции",
         'md_input_lbl': "Въведете Тикер (Yahoo Finance Symbol):",
-        'md_note': "ℹ️ Бележка: Данните са с ~15 мин закъснение. Използват се тикери на Yahoo Finance.",
-        'md_note_ex': "Примери: 'TSLA', 'AAPL'. За канадски акции добавете '.TO' (напр. 'U-UN.TO').",
+        'md_note': "ℹ️ Бележка: Данните са с ~15 мин закъснение.",
+        'md_note_ex': "Примери: 'TSLA', 'AAPL'. За канадски акции добавете '.TO'",
         'md_price': "Текуща Цена:",
         'md_btn_copy': "👉 Използвай тази цена в калкулатора",
         'md_chain_head': "⛓️ Верига Опции (Option Chain)",
@@ -266,8 +262,8 @@ texts = {
         'tab_data': "🔎 4. Market Data (Live)",
         'md_header': "📡 Market Data & Option Chain",
         'md_input_lbl': "Enter Ticker (Yahoo Finance Symbol):",
-        'md_note': "ℹ️ Note: Data is delayed by ~15 mins. Use Yahoo Finance tickers.",
-        'md_note_ex': "Examples: 'TSLA', 'AAPL'. For Canadian stocks try adding '.TO' (e.g. 'U-UN.TO').",
+        'md_note': "ℹ️ Note: Data is delayed by ~15 mins.",
+        'md_note_ex': "Examples: 'TSLA', 'AAPL'. For Canadian stocks try adding '.TO'",
         'md_price': "Current Price:",
         'md_btn_copy': "👉 Use this price in calculator",
         'md_chain_head': "⛓️ Option Chain",
@@ -329,8 +325,7 @@ texts = {
     }
 }
 
-# --- ИЗБОР НА ЕЗИК И МЕНЮ ---
-# Слагаме избора на език точно над табовете, вдясно
+# Избор на език
 col_spacer, col_lang = st.columns([6, 1])
 with col_lang:
     lang_sel = st.selectbox("🌐 Language", ["BG", "EN"], index=0 if st.session_state.language=='BG' else 1, label_visibility="collapsed", key="lang_select")
@@ -341,20 +336,18 @@ with col_lang:
 t = texts[st.session_state.language]
 today = date.today()
 
-# ГЛАВНО МЕНЮ (Радио бутони)
+# ГЛАВНО МЕНЮ (РАДИО)
 selected_section = st.radio(
     t['choose_strat'],
     [t['tab_put'], t['tab_call'], t['tab_roll'], t['tab_data']],
     index=0,
-    horizontal=True # Хоризонтално меню, за да изглежда като табове
+    horizontal=True
 )
 st.write("---")
 
 val_price = st.session_state.fetched_price
 
-# ==========================================
-# SECTION 1: SELLING PUT
-# ==========================================
+# --- SECTION 1: PUT ---
 if selected_section == t['tab_put']:
     st.header(t['put_header'])
     col1, col2 = st.columns(2)
@@ -400,9 +393,7 @@ if selected_section == t['tab_put']:
              st.caption(f"🛡️ {t['safety_msg']}")
         st.info(f"💰 {t['collateral']}: **${collateral:,.0f}**")
 
-# ==========================================
-# SECTION 2: SELLING CALL
-# ==========================================
+# --- SECTION 2: CALL ---
 elif selected_section == t['tab_call']:
     st.header(t['call_header'])
     col1, col2 = st.columns(2)
@@ -444,9 +435,7 @@ elif selected_section == t['tab_call']:
         if cap_gains_per_share < 0:
             st.error(f"⚠️ Внимание: Страйкът (${strike_call}) е под вашата цена на купуване (${cost_basis}).")
 
-# ==========================================
-# SECTION 3: ROLLING
-# ==========================================
+# --- SECTION 3: ROLL ---
 elif selected_section == t['tab_roll']:
     st.header(t['roll_header'])
     
@@ -548,16 +537,3 @@ elif selected_section == t['tab_roll']:
             {t['risk_text_3']} **{ann_win:.2f}%** (при успех).
             """)
         else:
-            st.write(f"📈 Дори при провал, доходността ви се повишава до **{ann_fail:.2f}%**! Това е чиста победа.")
-            
-        if ann_win > ann_base and ann_fail > (ann_base * 0.5):
-             st.success(t['verdict_great'])
-        elif ann_fail < (ann_base * 0.5): 
-             st.error(t['verdict_bad'])
-        else:
-             st.info("⚠️ Сделката е неутрална/приемлива.")
-
-# ==========================================
-# SECTION 4: MARKET DATA (NEW MAIN TAB)
-# ==========================================
-elif selected_section == t['tab_data']:

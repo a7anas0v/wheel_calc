@@ -7,7 +7,7 @@ import pandas as pd
 st.set_page_config(
     page_title="Aivan Capital | The Wheel Pro",
     page_icon="💎",
-    layout="centered", # ПРОМЯНА: Върнато на centered (по подразбиране)
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 
@@ -63,11 +63,11 @@ st.markdown("""
         background-color: transparent;
         padding: 0;
         border: none;
-        justify-content: center; /* Центрирани бутони при centered layout */
+        justify-content: center;
     }
     .stRadio > div[role="radiogroup"] > label {
         flex: 1 1 auto;
-        min-width: 100px; /* Малко по-компактни за centered layout */
+        min-width: 100px;
         text-align: center;
         padding: 10px 12px;
         background-color: rgba(30, 41, 59, 0.6);
@@ -95,7 +95,7 @@ st.markdown("""
         transform: translateY(-2px);
     }
 
-    /* ЛЕНТА С ДАННИ (Компактна за centered) */
+    /* ЛЕНТА С ДАННИ */
     .ticker-box {
         background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
         border-radius: 12px;
@@ -140,13 +140,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. ФУНКЦИЯ ЗА ЖИВИ ДАННИ (USD/EUR + VIX) ---
+# --- 4. ФУНКЦИЯ ЗА ЖИВИ ДАННИ ---
 @st.cache_data(ttl=300)
 def get_live_market_data():
     tickers = {
         'S&P 500': '^GSPC',
-        'USD/EUR': 'EUR=X', # ПРОМЯНА: Долар спрямо Евро
-        'VIX': '^VIX'       # ПРОМЯНА: Махнахме "(FEAR)"
+        'USD/EUR': 'EUR=X',
+        'VIX': '^VIX'
     }
     live_data = []
     try:
@@ -169,7 +169,6 @@ def get_live_market_data():
                     direction = "up" if change_pct >= 0 else "down"
                     if abs(change_pct) < 0.01: direction = "neutral"
                     
-                    # Форматиране
                     if 'VIX' in name or 'USD' in name: price_fmt = f"{price:.2f}"
                     else: price_fmt = f"{price:,.2f}"
                         
@@ -204,7 +203,7 @@ with col_lang:
         st.session_state.language = lang_sel
         st.rerun()
 
-# --- 6. ЛЕНТА С ДАННИ (3 КОЛОНИ) ---
+# --- 6. ЛЕНТА С ДАННИ ---
 market_data = get_live_market_data()
 if market_data:
     cols = st.columns(3)
@@ -389,7 +388,7 @@ if 'last_ticker' not in st.session_state:
     st.session_state.last_ticker = ""
 
 # За Centered Layout разпределяме мястото по-равномерно
-c_search, c_space = st.columns([1, 1]) # 50/50
+c_search, c_space = st.columns([1, 1])
 
 with c_search:
     global_ticker = st.text_input(t['global_ticker_label'], key="master_ticker_input", placeholder="e.g. NVDA").upper()
@@ -397,20 +396,30 @@ with c_search:
     # ЛОГИКА ЗА ТЪРСЕНЕ И ОБНОВЯВАНЕ
     if global_ticker:
         if global_ticker != st.session_state.last_ticker:
+            # ТУК Е ПРОМЯНАТА: По-безопасен начин за извличане и рестартиране
+            found_price = None
             try:
-                with st.spinner("Wait..."):
-                    live_data = yf.Ticker(global_ticker).fast_info
-                    current_price = live_data.last_price
-                    st.session_state.global_fetched_price = current_price
-                    st.session_state.last_ticker = global_ticker
-                    
-                    # === Форсираме обновяване на полетата ===
-                    st.session_state.put_price_input = current_price
-                    st.session_state.call_cost_input = current_price
-                    st.rerun() 
-            except:
+                with st.spinner("⏳"):
+                    stock = yf.Ticker(global_ticker)
+                    # Опитваме се да вземем цената (fast_info е по-бързо)
+                    found_price = stock.fast_info.last_price
+            except Exception:
+                pass # Игнорираме грешката тук, за да не счупим rerun-а
+
+            if found_price and found_price > 0:
+                st.session_state.global_fetched_price = found_price
+                st.session_state.last_ticker = global_ticker
+                
+                # Обновяване на полетата
+                st.session_state.put_price_input = found_price
+                st.session_state.call_cost_input = found_price
+                
+                # СЕГА рестартираме безопасно
+                st.rerun()
+            else:
                 st.warning("Not found")
         
+        # Ако имаме цена, я показваме
         if st.session_state.global_fetched_price > 0:
             st.markdown('<div class="big-price-metric">', unsafe_allow_html=True)
             st.metric(label="Price", value=f"${st.session_state.global_fetched_price:,.2f}", label_visibility="collapsed")

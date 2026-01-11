@@ -14,7 +14,6 @@ st.set_page_config(
 )
 
 # --- ДИНАМИЧНА ДАТА ---
-# Взимаме днешната дата и я форматираме като "Jan 11, 2026"
 current_date = datetime.now().strftime("%b %d, %Y")
 
 # --- ДИЗАЙНЕРСКИ СТИЛОВЕ (CSS) ---
@@ -40,6 +39,23 @@ st.markdown("""
         margin-bottom: 1rem;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
+
+    /* Top Ticker Style */
+    .ticker-box {
+        background: rgba(30, 41, 59, 0.5);
+        border-radius: 8px;
+        padding: 8px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid rgba(255,255,255,0.05);
+        margin-bottom: 10px;
+    }
+    
+    .ticker-symbol { font-size: 0.8rem; font-weight: 700; color: #94a3b8; }
+    .ticker-price { font-size: 0.9rem; font-weight: 900; color: #f8fafc; }
+    .ticker-up { color: #34d399; font-size: 0.75rem; font-weight: 700; }
+    .ticker-down { color: #fb7185; font-size: 0.75rem; font-weight: 700; }
 
     .kpi-label {
         font-size: 0.65rem;
@@ -68,33 +84,51 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
         font-weight: 900;
     }
-
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-        width: 5px;
-    }
-    ::-webkit-scrollbar-track {
-        background: #020617;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: #1e293b;
-        border-radius: 10px;
-    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- HEADER (ОБНОВЕН) ---
+# --- HEADER ---
 header_col1, header_col2 = st.columns([3, 1])
 with header_col1:
     st.markdown(' <h1 style="font-size: 3.5rem; margin-bottom: -10px; font-style: italic;">AIVAN <span class="gradient-text">CAPITAL</span></h1>', unsafe_allow_html=True)
-    # Тук вмъкваме динамичната променлива {current_date}
     st.markdown(f'<p style="color: #64748b; font-size: 11px; font-weight: 700; letter-spacing: 0.4em; text-transform: uppercase;">Wheel Strategy Pro Terminal | {current_date}</p>', unsafe_allow_html=True)
 
 with header_col2:
     st.write("")
     st.markdown('<p style="text-align: right; color: #38bdf8; font-size: 10px; font-weight: 900; letter-spacing: 0.1em; border: 1px solid #38bdf8; padding: 5px 10px; border-radius: 50px;">POWERED BY AIVAN SOLUTIONS</p>', unsafe_allow_html=True)
 
-# --- KPI TICKER SECTION (Адаптирано за Wheel) ---
+st.write("---")
+
+# --- TOP MARKET TICKER (NOVA FUNKCIONALNOST) ---
+# Данните са примерни за визията. В реално приложение ще се връзват с API.
+m1, m2, m3, m4, m5 = st.columns(5)
+
+market_data = [
+    {"sym": "S&P 500", "price": "5,940.12", "chg": "+0.45%", "dir": "up"},
+    {"sym": "NASDAQ 100", "price": "19,850.50", "chg": "+0.82%", "dir": "up"},
+    {"sym": "GOLD (XAU)", "price": "$3,142.00", "chg": "+1.20%", "dir": "up"},
+    {"sym": "CRUDE OIL", "price": "$74.50", "chg": "-0.30%", "dir": "down"},
+    {"sym": "NAT GAS", "price": "$2.14", "chg": "-4.50%", "dir": "down"}
+]
+
+cols_market = [m1, m2, m3, m4, m5]
+
+for i, m in enumerate(market_data):
+    color_class = "ticker-up" if m['dir'] == "up" else "ticker-down"
+    arrow = "▲" if m['dir'] == "up" else "▼"
+    
+    with cols_market[i]:
+        st.markdown(f"""
+            <div class="ticker-box">
+                <div>
+                    <div class="ticker-symbol">{m['sym']}</div>
+                    <div class="ticker-price">{m['price']}</div>
+                </div>
+                <div class="{color_class}">{arrow} {m['chg']}</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+# --- KPI TICKER SECTION (Wheel Strategy Stats) ---
 st.write("")
 t1, t2, t3, t4, t5, t6 = st.columns(6)
 
@@ -178,18 +212,6 @@ with col_right:
     fig_inc = px.pie(income_df, values='Value', names='Source', hole=0.6, color_discrete_sequence=['#38bdf8', '#818cf8', '#c084fc', '#475569'])
     fig_inc.update_layout(showlegend=False, height=200, margin=dict(l=0, r=0, t=0, b=0), paper_bgcolor='rgba(0,0,0,0)')
     st.plotly_chart(fig_inc, use_container_width=True)
-
-# --- AI FACT CHECK INTERFACE ---
-st.write("---")
-col_f1, col_f2 = st.columns([1, 2])
-with col_f1:
-    st.markdown('### <span style="color: #c084fc;">✨</span> AIVAN Intelligence')
-    st.markdown('<p style="font-size: 11px; color: #64748b;">Analyze strike probabilities or run "What-If" scenarios.</p>', unsafe_allow_html=True)
-
-with col_f2:
-    query = st.text_input("Ask the terminal...", placeholder="What is the probability of VST closing above $170 by Jan 19?")
-    if st.button("RUN SIMULATION", use_container_width=True):
-        st.info("Calculating Greeks... Gamma Exposure High.")
 
 # --- FOOTER ---
 st.markdown("""

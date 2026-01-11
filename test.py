@@ -15,7 +15,7 @@ st.set_page_config(
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 
-# --- 3. ДИЗАЙН И CSS (ИЗЧИСТЕН & АДАПТИВЕН) ---
+# --- 3. ДИЗАЙН И CSS (FIXED COLORS & BACKGROUNDS) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -24,23 +24,40 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
     
+    /* Основен тъмен фон */
+    .stApp {
+        background-color: #020617;
+        color: #f8fafc;
+    }
+    
     /* --- MOBILE KEYBOARD FIX --- */
     .main .block-container {
         padding-bottom: 350px !important;
     }
 
-    /* 1. ЗАГЛАВИЕ (AIVAN) - АДАПТИВНО */
-    /* Използваме var(--text-color), за да е ЧЕРНО на светло и БЯЛО на тъмно */
+    /* --- ТЕКСТОВЕ И ЦВЕТОВЕ (#64748b) --- */
+    /* Насилваме малките текстове да са в искания цвят */
+    .brand-sub, 
+    .ticker-symbol, 
+    label, 
+    .stMarkdown p,
+    .stTextInput > label,
+    .stNumberInput > label,
+    .stSelectbox > label {
+        color: #64748b !important;
+        font-weight: 600 !important;
+    }
+
+    /* ЛОГО И ЗАГЛАВИЕ */
     .brand-title-text {
         font-size: 3.5rem;
         margin-bottom: -5px;
         font-style: italic;
         line-height: 1.2;
-        color: var(--text-color); 
+        color: #f8fafc; /* Бяло за AIVAN */
         font-weight: 800;
     }
 
-    /* 2. ЗАГЛАВИЕ (CAPITAL) - ВИНАГИ ГРАДИЕНТ */
     .gradient-text {
         background: linear-gradient(45deg, #38bdf8, #818cf8, #c084fc);
         -webkit-background-clip: text;
@@ -48,26 +65,22 @@ st.markdown("""
         font-weight: 900;
     }
     
-    /* 3. ПОДЗАГЛАВИЕ - ФИКСИРАН ЦВЯТ */
-    /* User: "keep the color for THE WHEEL PRO... I think it will be visible" */
     .brand-sub {
-        color: #64748b !important; 
         font-size: 11px;
-        font-weight: 700;
         letter-spacing: 0.2em;
         text-transform: uppercase;
         margin-top: -15px;
         margin-bottom: 30px;
     }
 
-    /* --- БУТОНИ ЗА МЕНЮТО (Clean Tabs) --- */
+    /* --- БУТОНИ ЗА МЕНЮТО (С БАКГРАУНД) --- */
     .stRadio > div[role="radiogroup"] > label > div:first-child {
         display: none;
     }
     .stRadio > div[role="radiogroup"] {
         display: flex;
         flex-wrap: wrap; 
-        gap: 8px;
+        gap: 10px;
         background-color: transparent;
         padding: 0;
         border: none;
@@ -77,73 +90,84 @@ st.markdown("""
         flex: 1 1 auto;
         min-width: 100px;
         text-align: center;
-        padding: 10px 12px;
-        /* Използваме стандартния вторичен фон на темата */
-        background-color: var(--secondary-background-color); 
-        border-radius: 8px;
+        padding: 12px 15px;
+        
+        /* ТУК Е ПРОМЯНАТА: Добавен фон и рамка */
+        background-color: #1e293b !important; /* Тъмно сиво-синьо (Slate 800) */
+        border: 1px solid #334155 !important; /* Тънка рамка */
+        
+        border-radius: 10px;
         cursor: pointer;
         font-weight: 700;
-        color: var(--text-color);
-        border: 1px solid transparent;
+        color: #94a3b8 !important; /* Светъл текст за неактивни */
         transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 0.9rem;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     .stRadio > div[role="radiogroup"] > label:hover {
-        border-color: #38bdf8;
-        opacity: 0.8;
-    }
-    /* АКТИВЕН БУТОН - Запазваме бранда */
-    .stRadio > div[role="radiogroup"] > label[data-checked="true"] {
-        background: linear-gradient(135deg, rgba(56, 189, 248, 0.9), rgba(192, 132, 252, 0.9));
-        color: #ffffff !important;
-        box-shadow: 0 4px 10px rgba(56, 189, 248, 0.3);
+        border-color: #38bdf8 !important;
+        color: #f8fafc !important;
         transform: translateY(-1px);
     }
+    /* АКТИВЕН БУТОН */
+    .stRadio > div[role="radiogroup"] > label[data-checked="true"] {
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.9), rgba(192, 132, 252, 0.9)) !important;
+        color: #ffffff !important;
+        border: none !important;
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        transform: translateY(-2px);
+    }
 
-    /* ЛЕНТА С ДАННИ */
+    /* --- ЛЕНТА С ДАННИ (С БАКГРАУНД) --- */
     .ticker-box {
-        background-color: var(--secondary-background-color);
-        border-radius: 10px;
-        padding: 12px 15px;
+        /* ТУК Е ПРОМЯНАТА: Фон за индексите */
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        
+        border-radius: 12px;
+        padding: 15px;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        border: 1px solid rgba(128, 128, 128, 0.1);
         transition: transform 0.2s ease;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         min-width: 100px;
+    }
+    .ticker-box:hover {
+        border-color: #38bdf8;
+        transform: translateY(-2px);
     }
     .ticker-row-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     
-    .ticker-symbol { 
-        font-size: 0.8rem; 
-        font-weight: 800; 
-        color: var(--text-color); 
-        opacity: 0.6;
-        letter-spacing: 0.05em; 
-    }
-    
-    .ticker-price { 
-        font-family: 'Inter', monospace; 
-        font-size: 1.2rem; 
-        font-weight: 700; 
-        color: var(--text-color); 
-    }
-    
+    .ticker-symbol { font-size: 0.8rem; letter-spacing: 0.05em; }
+    .ticker-price { font-family: 'Inter', monospace; font-size: 1.2rem; font-weight: 700; color: #f8fafc; }
     .ticker-pill { font-family: monospace; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
     
-    /* Цветовете за +/- са универсални */
-    .pill-up { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
-    .pill-down { background: rgba(244, 63, 94, 0.2); color: #f43f5e; }
-    .pill-neutral { background: rgba(148, 163, 184, 0.2); color: #64748b; }
+    .pill-up { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+    .pill-down { background: rgba(244, 63, 94, 0.2); color: #fb7185; }
+    .pill-neutral { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
 
+    /* СТИЛИЗАЦИЯ НА МЕТРИКИТЕ (Input Fields Background) */
+    div[data-testid="stMetric"] {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    
+    /* INPUT FIELDS STYLING */
+    input[type="text"], input[type="number"] {
+        background-color: #0f172a !important; /* По-тъмен фон за писане */
+        color: white !important;
+        border: 1px solid #334155 !important;
+    }
+    
     /* Голямата цена под търсачката */
     .big-price-metric div[data-testid="stMetricValue"] {
-        color: #38bdf8 !important; /* Синьо */
+        color: #38bdf8 !important;
         font-size: 1.8rem !important;
         font-weight: 800 !important;
     }
@@ -204,7 +228,6 @@ today_str = datetime.now().strftime("%b %d, %Y").upper()
 
 col_brand, col_lang = st.columns([5, 1])
 with col_brand:
-    # AIVAN е в клас, който се променя (черно/бяло), CAPITAL е с градиент
     st.markdown(f"""
         <div>
             <div class="brand-title-text">
@@ -321,9 +344,9 @@ texts = {
         'tab_call': "CALL (Exit)",
         'tab_roll': "Rolling",
         'tab_data': "Market Data",
-        'current_price': "Current Stock Price ($)",
+        'current_price': "Current Price ($)",
         'strike': "Strike Price ($)",
-        'premium': "Premium per Share ($)",
+        'premium': "Premium ($)",
         'date_expiry': "Expiration Date",
         'contracts': "Number of Contracts",
         'days_left': "Days to Expiration:",

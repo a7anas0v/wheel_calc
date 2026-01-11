@@ -11,11 +11,11 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. УПРАВЛЕНИЕ НА ЕЗИКА (Първо, за да го ползваме в UI) ---
+# --- 2. УПРАВЛЕНИЕ НА ЕЗИКА ---
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 
-# --- 3. ДИЗАЙН И CSS ---
+# --- 3. ДИЗАЙН И CSS (ОБНОВЕН ЗА МОБИЛНИ УСТРОЙСТВА) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -47,47 +47,57 @@ st.markdown("""
         margin-bottom: 30px;
     }
 
-    /* --- СТИЛ ЗА БУТОНИТЕ НА МЕНЮТО (Modern Tabs) --- */
-    /* Скриваме стандартните кръгчета */
+    /* --- НОВИ БУТОНИ ЗА МЕНЮТО (Mobile Friendly) --- */
+    
+    /* Скриваме стандартните радио кръгчета */
     .stRadio > div[role="radiogroup"] > label > div:first-child {
         display: none;
     }
+    
     /* Контейнер на бутоните */
     .stRadio > div[role="radiogroup"] {
         display: flex;
-        gap: 10px;
-        background-color: rgba(30, 41, 59, 0.5);
-        padding: 5px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        justify-content: center; /* Центриране на бутоните */
+        flex-wrap: wrap; /* ВАЖНО: Позволява пренасяне на нов ред при тесен екран */
+        gap: 12px; /* Разстояние между бутоните */
+        background-color: transparent; /* Без общ фон */
+        padding: 0;
+        border: none;
+        justify-content: flex-start; /* Подравняване наляво (или center) */
     }
+    
     /* Самите бутони (етикети) */
     .stRadio > div[role="radiogroup"] > label {
-        flex: 1;
+        flex: 1 1 auto; /* Гъвкав размер, но може да се свива/разширява */
+        min-width: 140px; /* Минимална ширина, за да не се мачка текста */
         text-align: center;
-        padding: 12px 20px;
-        border-radius: 8px;
+        padding: 14px 20px;
+        background-color: rgba(30, 41, 59, 0.6); /* Тъмен фон за всеки бутон */
+        border-radius: 10px;
         cursor: pointer;
         font-weight: 700;
-        transition: all 0.3s ease;
         color: #94a3b8;
-        border: 1px solid transparent;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.2s ease;
+        white-space: nowrap; /* Текстът никога да не става вертикален */
         display: flex;
-        justify-content: center;
         align-items: center;
+        justify-content: center;
     }
+    
     /* Ховър ефект */
     .stRadio > div[role="radiogroup"] > label:hover {
         background-color: rgba(56, 189, 248, 0.1);
         color: #f8fafc;
+        border-color: rgba(56, 189, 248, 0.3);
     }
-    /* АКТИВЕН БУТОН */
+    
+    /* АКТИВЕН БУТОН (Натиснат) - Ясна индикация */
     .stRadio > div[role="radiogroup"] > label[data-checked="true"] {
-        background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(192, 132, 252, 0.2));
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.8), rgba(192, 132, 252, 0.8));
         color: #ffffff;
-        border: 1px solid rgba(56, 189, 248, 0.5);
-        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); /* Светещ ефект */
+        transform: translateY(-2px); /* Леко повдигане */
     }
 
     /* ЛЕНТА С ДАННИ (TICKER TAPE) */
@@ -101,6 +111,7 @@ st.markdown("""
         border: 1px solid rgba(255,255,255,0.08);
         transition: transform 0.2s ease, border-color 0.2s;
         box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        min-width: 140px; /* За да не се смачкват на телефон */
     }
     .ticker-box:hover {
         transform: translateY(-2px);
@@ -172,7 +183,7 @@ def get_live_market_data():
         pass
     return live_data
 
-# --- 5. HEADER (ЗАГЛАВИЕ & ЕЗИК ГОРЕ ВДЯСНО) ---
+# --- 5. HEADER (ЗАГЛАВИЕ & ЕЗИК) ---
 today_str = datetime.now().strftime("%b %d, %Y").upper()
 
 col_brand, col_lang = st.columns([5, 1])
@@ -188,7 +199,6 @@ with col_brand:
     """, unsafe_allow_html=True)
 
 with col_lang:
-    # Езикът е преместен тук, горе вдясно
     lang_sel = st.selectbox("Language", ["BG", "EN"], index=0 if st.session_state.language=='BG' else 1, label_visibility="collapsed", key="lang_select_top")
     if lang_sel != st.session_state.language:
         st.session_state.language = lang_sel
@@ -223,7 +233,7 @@ if 'fetched_price' not in st.session_state:
 
 texts = {
     'BG': {
-        'choose_strat': "📂 Изберете Модул:",
+        'choose_strat': "Модул:",
         'tab_put': "PUT (Вход)",
         'tab_call': "CALL (Изход)",
         'tab_roll': "Ролване",
@@ -292,7 +302,7 @@ texts = {
         'verdict_bad': "🛑 НЕ СИ СТРУВА: Рискувате твърде много доходност."
     },
     'EN': {
-        'choose_strat': "📂 Select Module:",
+        'choose_strat': "Module:",
         'tab_put': "PUT (Entry)",
         'tab_call': "CALL (Exit)",
         'tab_roll': "Rolling",
@@ -365,7 +375,7 @@ texts = {
 t = texts[st.session_state.language]
 today = date.today()
 
-# ГЛАВНО МЕНЮ (Модерни бутони)
+# ГЛАВНО МЕНЮ (РАДИО БУТОНИ)
 selected_section = st.radio(
     t['choose_strat'],
     [t['tab_put'], t['tab_call'], t['tab_roll'], t['tab_data']],

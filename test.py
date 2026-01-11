@@ -537,3 +537,72 @@ elif selected_section == t['tab_roll']:
             {t['risk_text_3']} **{ann_win:.2f}%** (при успех).
             """)
         else:
+            st.write(f"📈 Дори при провал, доходността ви се повишава до **{ann_fail:.2f}%**! Това е чиста победа.")
+            
+        if ann_win > ann_base and ann_fail > (ann_base * 0.5):
+             st.success(t['verdict_great'])
+        elif ann_fail < (ann_base * 0.5): 
+             st.error(t['verdict_bad'])
+        else:
+             st.info("⚠️ Сделката е неутрална/приемлива.")
+
+# --- SECTION 4: MARKET DATA ---
+elif selected_section == t['tab_data']:
+    st.header(t['md_header'])
+    
+    st.info(f"{t['md_note']}\n\n{t['md_note_ex']}")
+    
+    ticker_symbol = st.text_input(t['md_input_lbl'], value="").upper()
+    
+    if ticker_symbol:
+        try:
+            stock = yf.Ticker(ticker_symbol)
+            info = stock.info
+            # Опитваме се да хванем цена от различни полета
+            current_live_price = info.get('regularMarketPrice', info.get('currentPrice', None))
+            
+            if current_live_price:
+                st.metric(t['md_price'], f"${current_live_price:.2f}")
+                
+                # Бутон за копиране
+                if st.button(t['md_btn_copy']):
+                    st.session_state.fetched_price = current_live_price
+                    st.success("Цената е запазена! Отидете в таб 1 или 2, за да я видите.")
+                
+                st.divider()
+                st.subheader(t['md_chain_head'])
+                
+                expirations = stock.options
+                if expirations:
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        sel_exp = st.selectbox(t['md_exp'], expirations)
+                    with c2:
+                        opt_type = st.radio(t['md_type'], ["Put", "Call"], horizontal=True)
+                    
+                    if sel_exp:
+                        opt_chain = stock.option_chain(sel_exp)
+                        data = opt_chain.puts if opt_type == "Put" else opt_chain.calls
+                        
+                        # Форматиране на таблицата
+                        df_show = data[['strike', 'lastPrice', 'bid', 'ask', 'volume', 'openInterest']]
+                        st.dataframe(df_show, hide_index=True, use_container_width=True)
+                else:
+                    st.warning(t['md_no_data'])
+                    
+            else:
+                st.warning(f"Не мога да намеря цена за: {ticker_symbol}. Проверете дали тикерът е правилен в Yahoo Finance.")
+                
+        except Exception as e:
+            st.error(f"{t['md_error']} ({e})")
+
+# --- FOOTER ---
+st.write("---")
+st.markdown(
+    """
+    <div style='text-align: center; color: grey;'>
+        <small>Powered by <b>AIVAN Solutions</b> | © 2026 Aivan Capital</small>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)

@@ -15,7 +15,7 @@ st.set_page_config(
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 
-# --- 3. ДИЗАЙН И CSS ---
+# --- 3. ДИЗАЙН И CSS (HARDENED DARK MODE) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -24,10 +24,48 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
 
-    /* Основен тъмен фон */
+    /* 1. ГЛОБАЛЕН ФОН - НАСИЛВАМЕ ТЪМНО */
     .stApp {
-        background-color: #020617;
-        color: #f8fafc;
+        background-color: #020617 !important;
+        color: #f8fafc !important;
+    }
+    
+    /* 2. НАСИЛВАМЕ ВСИЧКИ TEKST INPUTS & NUMBER INPUTS ДА СА ТЪМНИ */
+    input[type="text"], input[type="number"] {
+        background-color: rgba(30, 41, 59, 0.6) !important;
+        color: #f8fafc !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Оцветяване на плейсхолдъра (текстът за подсказка) */
+    ::placeholder {
+        color: #64748b !important;
+        opacity: 1 !important;
+    }
+
+    /* 3. ОПРАВЯНЕ НА БУТОНИТЕ +/- НА NUMBER INPUT */
+    /* Това са малките бутони вътре в полетата за числа */
+    div[data-baseweb="input"] {
+        background-color: rgba(30, 41, 59, 0.6) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    button[kind="secondary"] {
+        background-color: transparent !important;
+        color: #f8fafc !important;
+        border: none !important;
+    }
+    
+    /* 4. ЕТИКЕТИ (LABELS) - ДА СЕ ВИЖДАТ НА ТЪМНО */
+    label, .stMarkdown p {
+        color: #94a3b8 !important;
+    }
+    
+    /* 5. SELECTBOX (Падащото меню за езика) */
+    div[data-baseweb="select"] > div {
+        background-color: rgba(30, 41, 59, 0.6) !important;
+        color: #f8fafc !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
     }
     
     /* --- MOBILE KEYBOARD FIX --- */
@@ -43,7 +81,7 @@ st.markdown("""
         font-weight: 900;
     }
     .brand-sub {
-        color: #64748b;
+        color: #64748b !important;
         font-size: 11px;
         font-weight: 700;
         letter-spacing: 0.2em;
@@ -70,12 +108,12 @@ st.markdown("""
         min-width: 100px;
         text-align: center;
         padding: 10px 12px;
-        background-color: rgba(30, 41, 59, 0.6);
+        background-color: rgba(30, 41, 59, 0.6) !important; /* Force dark bg */
         border-radius: 10px;
         cursor: pointer;
         font-weight: 700;
-        color: #94a3b8;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        color: #94a3b8 !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
         transition: all 0.2s ease;
         display: flex;
         align-items: center;
@@ -83,14 +121,14 @@ st.markdown("""
         font-size: 0.9rem;
     }
     .stRadio > div[role="radiogroup"] > label:hover {
-        background-color: rgba(56, 189, 248, 0.1);
-        color: #f8fafc;
-        border-color: rgba(56, 189, 248, 0.3);
+        background-color: rgba(56, 189, 248, 0.1) !important;
+        color: #f8fafc !important;
+        border-color: rgba(56, 189, 248, 0.3) !important;
     }
     .stRadio > div[role="radiogroup"] > label[data-checked="true"] {
-        background: linear-gradient(135deg, rgba(56, 189, 248, 0.8), rgba(192, 132, 252, 0.8));
-        color: #ffffff;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.8), rgba(192, 132, 252, 0.8)) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
         box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
         transform: translateY(-2px);
     }
@@ -119,10 +157,16 @@ st.markdown("""
 
     /* СТИЛИЗАЦИЯ НА МЕТРИКИТЕ */
     div[data-testid="stMetric"] {
-        background-color: rgba(30, 41, 59, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background-color: rgba(30, 41, 59, 0.5) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
         padding: 15px;
         border-radius: 10px;
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #94a3b8 !important;
+    }
+    div[data-testid="stMetricValue"] {
+        color: #f8fafc !important;
     }
     
     /* Голямата цена под търсачката */
@@ -387,7 +431,6 @@ if 'global_fetched_price' not in st.session_state:
 if 'last_ticker' not in st.session_state:
     st.session_state.last_ticker = ""
 
-# За Centered Layout разпределяме мястото по-равномерно
 c_search, c_space = st.columns([1, 1])
 
 with c_search:
@@ -396,15 +439,13 @@ with c_search:
     # ЛОГИКА ЗА ТЪРСЕНЕ И ОБНОВЯВАНЕ
     if global_ticker:
         if global_ticker != st.session_state.last_ticker:
-            # ТУК Е ПРОМЯНАТА: По-безопасен начин за извличане и рестартиране
             found_price = None
             try:
                 with st.spinner("⏳"):
                     stock = yf.Ticker(global_ticker)
-                    # Опитваме се да вземем цената (fast_info е по-бързо)
                     found_price = stock.fast_info.last_price
             except Exception:
-                pass # Игнорираме грешката тук, за да не счупим rerun-а
+                pass 
 
             if found_price and found_price > 0:
                 st.session_state.global_fetched_price = found_price
@@ -414,12 +455,10 @@ with c_search:
                 st.session_state.put_price_input = found_price
                 st.session_state.call_cost_input = found_price
                 
-                # СЕГА рестартираме безопасно
                 st.rerun()
             else:
                 st.warning("Not found")
         
-        # Ако имаме цена, я показваме
         if st.session_state.global_fetched_price > 0:
             st.markdown('<div class="big-price-metric">', unsafe_allow_html=True)
             st.metric(label="Price", value=f"${st.session_state.global_fetched_price:,.2f}", label_visibility="collapsed")
@@ -434,7 +473,6 @@ if selected_section == t['tab_put']:
     st.header(t['put_header'])
     col1, col2 = st.columns(2)
     with col1:
-        # Използваме key, за да може да се обновява от глобалния инпут
         cp_input = st.number_input(t['current_price'], value=0.0, step=0.10, placeholder="0.00", key="put_price_input")
         strike_input = st.number_input(t['strike'], value=None, step=0.5, placeholder="0.00")
         current_price = cp_input if cp_input is not None else 0.0

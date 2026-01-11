@@ -15,7 +15,7 @@ st.set_page_config(
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 
-# --- 3. ДИЗАЙН И CSS (FIXED COLORS & BACKGROUNDS) ---
+# --- 3. ДИЗАЙН И CSS (ИСТИНСКИ АДАПТИВЕН) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -24,37 +24,35 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
     
-    /* Основен тъмен фон */
-    .stApp {
-        background-color: #020617;
-        color: #f8fafc;
-    }
-    
+    /* --- ВАЖНО: ПРЕМАХНАХМЕ НАСИЛСТВЕНИЯ ФОН НА СТРАНИЦАТА --- */
+    /* Сега Streamlit сам ще реши дали е бяло или черно */
+
     /* --- MOBILE KEYBOARD FIX --- */
     .main .block-container {
         padding-bottom: 350px !important;
     }
 
-    /* --- ТЕКСТОВЕ И ЦВЕТОВЕ (#64748b) --- */
-    /* Насилваме малките текстове да са в искания цвят */
+    /* --- МАЛКИ ТЕКСТОВЕ (FIXED COLOR #64748b) --- */
     .brand-sub, 
     .ticker-symbol, 
     label, 
     .stMarkdown p,
     .stTextInput > label,
     .stNumberInput > label,
-    .stSelectbox > label {
+    .stSelectbox > label,
+    div[data-testid="stCaptionContainer"] {
         color: #64748b !important;
         font-weight: 600 !important;
     }
 
     /* ЛОГО И ЗАГЛАВИЕ */
+    /* AIVAN се променя (черно/бяло), CAPITAL е с градиент */
     .brand-title-text {
         font-size: 3.5rem;
         margin-bottom: -5px;
         font-style: italic;
         line-height: 1.2;
-        color: #f8fafc; /* Бяло за AIVAN */
+        color: var(--text-color); 
         font-weight: 800;
     }
 
@@ -73,7 +71,7 @@ st.markdown("""
         margin-bottom: 30px;
     }
 
-    /* --- БУТОНИ ЗА МЕНЮТО (С БАКГРАУНД) --- */
+    /* --- БУТОНИ ЗА МЕНЮТО (КАРТИ) --- */
     .stRadio > div[role="radiogroup"] > label > div:first-child {
         display: none;
     }
@@ -92,24 +90,23 @@ st.markdown("""
         text-align: center;
         padding: 12px 15px;
         
-        /* ТУК Е ПРОМЯНАТА: Добавен фон и рамка */
-        background-color: #1e293b !important; /* Тъмно сиво-синьо (Slate 800) */
-        border: 1px solid #334155 !important; /* Тънка рамка */
+        /* АДАПТИВЕН ФОН: Взима второстепенния цвят на темата */
+        background-color: var(--secondary-background-color) !important; 
+        border: 1px solid rgba(128, 128, 128, 0.2) !important; /* Тънка рамка */
         
         border-radius: 10px;
         cursor: pointer;
         font-weight: 700;
-        color: #94a3b8 !important; /* Светъл текст за неактивни */
+        color: var(--text-color) !important;
         transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 0.9rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .stRadio > div[role="radiogroup"] > label:hover {
         border-color: #38bdf8 !important;
-        color: #f8fafc !important;
         transform: translateY(-1px);
     }
     /* АКТИВЕН БУТОН */
@@ -117,15 +114,15 @@ st.markdown("""
         background: linear-gradient(135deg, rgba(56, 189, 248, 0.9), rgba(192, 132, 252, 0.9)) !important;
         color: #ffffff !important;
         border: none !important;
-        box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        box-shadow: 0 4px 10px rgba(56, 189, 248, 0.3);
         transform: translateY(-2px);
     }
 
-    /* --- ЛЕНТА С ДАННИ (С БАКГРАУНД) --- */
+    /* --- ЛЕНТА С ДАННИ (КАРТИ) --- */
     .ticker-box {
-        /* ТУК Е ПРОМЯНАТА: Фон за индексите */
-        background-color: #1e293b;
-        border: 1px solid #334155;
+        /* АДАПТИВЕН ФОН */
+        background-color: var(--secondary-background-color);
+        border: 1px solid rgba(128, 128, 128, 0.2);
         
         border-radius: 12px;
         padding: 15px;
@@ -133,7 +130,7 @@ st.markdown("""
         flex-direction: column;
         justify-content: center;
         transition: transform 0.2s ease;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         min-width: 100px;
     }
     .ticker-box:hover {
@@ -142,27 +139,34 @@ st.markdown("""
     }
     .ticker-row-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     
-    .ticker-symbol { font-size: 0.8rem; letter-spacing: 0.05em; }
-    .ticker-price { font-family: 'Inter', monospace; font-size: 1.2rem; font-weight: 700; color: #f8fafc; }
+    .ticker-symbol { font-size: 0.8rem; letter-spacing: 0.05em; } /* Цвят е зададен горе глобално */
+    
+    .ticker-price { 
+        font-family: 'Inter', monospace; 
+        font-size: 1.2rem; 
+        font-weight: 700; 
+        color: var(--text-color); /* Адаптивен цвят на цената */
+    }
+    
     .ticker-pill { font-family: monospace; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
     
-    .pill-up { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
-    .pill-down { background: rgba(244, 63, 94, 0.2); color: #fb7185; }
-    .pill-neutral { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+    /* Цветовете за +/- са универсални и се виждат на бяло и черно */
+    .pill-up { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+    .pill-down { background: rgba(244, 63, 94, 0.2); color: #f43f5e; }
+    .pill-neutral { background: rgba(148, 163, 184, 0.2); color: #64748b; }
 
-    /* СТИЛИЗАЦИЯ НА МЕТРИКИТЕ (Input Fields Background) */
+    /* СТИЛИЗАЦИЯ НА МЕТРИКИТЕ И ПОЛЕТАТА */
+    /* Използваме системния фон, за да не стои като "кръпка" на светла тема */
     div[data-testid="stMetric"] {
-        background-color: #1e293b !important;
-        border: 1px solid #334155 !important;
+        background-color: var(--secondary-background-color) !important;
+        border: 1px solid rgba(128, 128, 128, 0.2) !important;
         padding: 15px;
         border-radius: 10px;
     }
     
-    /* INPUT FIELDS STYLING */
+    /* INPUT FIELDS - Standard Streamlit style but enforced borders */
     input[type="text"], input[type="number"] {
-        background-color: #0f172a !important; /* По-тъмен фон за писане */
-        color: white !important;
-        border: 1px solid #334155 !important;
+        border: 1px solid rgba(128, 128, 128, 0.3) !important;
     }
     
     /* Голямата цена под търсачката */
@@ -228,6 +232,7 @@ today_str = datetime.now().strftime("%b %d, %Y").upper()
 
 col_brand, col_lang = st.columns([5, 1])
 with col_brand:
+    # AIVAN е с var(--text-color), CAPITAL е с градиент
     st.markdown(f"""
         <div>
             <div class="brand-title-text">
@@ -432,7 +437,7 @@ c_search, c_space = st.columns([1, 1])
 with c_search:
     global_ticker = st.text_input(t['global_ticker_label'], key="master_ticker_input", placeholder="e.g. NVDA").upper()
     
-    # ЛОГИКА ЗА ТЪРСЕНЕ И ОБНОВЯВАНЕ (SAFE)
+    # ЛОГИКА ЗА ТЪРСЕНЕ И ОБНОВЯВАНЕ
     if global_ticker:
         if global_ticker != st.session_state.last_ticker:
             found_price = None

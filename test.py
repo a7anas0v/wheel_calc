@@ -15,7 +15,7 @@ st.set_page_config(
 if 'language' not in st.session_state:
     st.session_state.language = 'BG'
 
-# --- 3. ДИЗАЙН И CSS (С ФИКС ЗА КЛАВИАТУРАТА) ---
+# --- 3. ДИЗАЙН И CSS ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -31,7 +31,6 @@ st.markdown("""
     }
     
     /* --- MOBILE KEYBOARD FIX --- */
-    /* Добавяме празно място отдолу, за да може екрана да се вдига над клавиатурата */
     .main .block-container {
         padding-bottom: 350px !important;
     }
@@ -53,7 +52,7 @@ st.markdown("""
         margin-bottom: 30px;
     }
 
-    /* --- НОВИ БУТОНИ ЗА МЕНЮТО (Mobile Friendly) --- */
+    /* --- БУТОНИ ЗА МЕНЮТО (Tabs) --- */
     .stRadio > div[role="radiogroup"] > label > div:first-child {
         display: none;
     }
@@ -78,7 +77,6 @@ st.markdown("""
         color: #94a3b8;
         border: 1px solid rgba(255, 255, 255, 0.05);
         transition: all 0.2s ease;
-        white-space: nowrap;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -88,13 +86,22 @@ st.markdown("""
         color: #f8fafc;
         border-color: rgba(56, 189, 248, 0.3);
     }
-    /* АКТИВЕН БУТОН */
     .stRadio > div[role="radiogroup"] > label[data-checked="true"] {
         background: linear-gradient(135deg, rgba(56, 189, 248, 0.8), rgba(192, 132, 252, 0.8));
         color: #ffffff;
         border: 1px solid rgba(255, 255, 255, 0.2);
         box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
         transform: translateY(-2px);
+    }
+
+    /* СТИЛ ЗА GLOBAL TICKER INPUT */
+    .ticker-input-container {
+        background-color: rgba(30, 41, 59, 0.4);
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        margin-top: 10px;
+        margin-bottom: 20px;
     }
 
     /* ЛЕНТА С ДАННИ */
@@ -122,7 +129,6 @@ st.markdown("""
     .pill-down { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.2); }
     .pill-neutral { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
 
-    /* СТИЛИЗАЦИЯ НА КАЛКУЛАТОРА */
     div[data-testid="stMetric"] {
         background-color: rgba(30, 41, 59, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.05);
@@ -132,7 +138,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 4. ФУНКЦИЯ ЗА ЖИВИ ДАННИ ---
+# --- 4. ФУНКЦИЯ ЗА ЖИВИ ДАННИ (TAPE) ---
 @st.cache_data(ttl=300)
 def get_live_market_data():
     tickers = {
@@ -182,7 +188,6 @@ def get_live_market_data():
 today_str = datetime.now().strftime("%b %d, %Y").upper()
 
 col_brand, col_lang = st.columns([5, 1])
-
 with col_brand:
     st.markdown(f"""
         <div>
@@ -221,29 +226,15 @@ else:
 
 st.write("---")
 
-# --- 7. WHEEL CALCULATOR ---
-
-if 'fetched_price' not in st.session_state:
-    st.session_state.fetched_price = None
-
+# --- 7. РЕЧНИК С ТЕКСТОВЕ ---
 texts = {
     'BG': {
         'choose_strat': "Модул:",
+        'global_ticker_label': "⚡ Търси Акция (Въведи Тикер за Авто-Цена):",
         'tab_put': "PUT (Вход)",
         'tab_call': "CALL (Изход)",
         'tab_roll': "Ролване",
         'tab_data': "Пазарни Данни",
-        'md_header': "📡 Пазарни Данни & Верига Опции",
-        'md_input_lbl': "Въведете Тикер (Yahoo Finance Symbol):",
-        'md_note': "ℹ️ Бележка: Данните са с ~15 мин закъснение.",
-        'md_note_ex': "Примери: 'TSLA', 'AAPL'. За канадски акции добавете '.TO'",
-        'md_price': "Текуща Цена:",
-        'md_btn_copy': "👉 Използвай тази цена в калкулатора",
-        'md_chain_head': "⛓️ Верига Опции (Option Chain)",
-        'md_exp': "Избери Падеж:",
-        'md_type': "Тип Опция:",
-        'md_no_data': "Няма намерени данни за опции или тикерът е грешен.",
-        'md_error': "Грешка при търсене. Проверете символа.",
         'current_price': "Текуща цена на акцията ($)",
         'strike': "Страйк Цена ($)",
         'premium': "Премия на акция ($)",
@@ -294,25 +285,26 @@ texts = {
         'risk_text_2': "на",
         'risk_text_3': "за да гоните потенциал за",
         'verdict_great': "✅ ОТЛИЧНО: Малък риск за голяма награда.",
-        'verdict_bad': "🛑 НЕ СИ СТРУВА: Рискувате твърде много доходност."
+        'verdict_bad': "🛑 НЕ СИ СТРУВА: Рискувате твърде много доходност.",
+        'md_header': "📡 Пазарни Данни & Верига Опции",
+        'md_input_lbl': "Въведете Тикер (Yahoo Finance Symbol):",
+        'md_note': "ℹ️ Бележка: Данните са с ~15 мин закъснение.",
+        'md_note_ex': "Примери: 'TSLA', 'AAPL'. За канадски акции добавете '.TO'",
+        'md_price': "Текуща Цена:",
+        'md_btn_copy': "👉 Използвай тази цена в калкулатора",
+        'md_chain_head': "⛓️ Верига Опции (Option Chain)",
+        'md_exp': "Избери Падеж:",
+        'md_type': "Тип Опция:",
+        'md_no_data': "Няма намерени данни за опции или тикерът е грешен.",
+        'md_error': "Грешка при търсене. Проверете символа."
     },
     'EN': {
         'choose_strat': "Module:",
+        'global_ticker_label': "⚡ Search Ticker (Auto-Populate Price):",
         'tab_put': "PUT (Entry)",
         'tab_call': "CALL (Exit)",
         'tab_roll': "Rolling",
         'tab_data': "Market Data",
-        'md_header': "📡 Market Data & Option Chain",
-        'md_input_lbl': "Enter Ticker (Yahoo Finance Symbol):",
-        'md_note': "ℹ️ Note: Data is delayed by ~15 mins.",
-        'md_note_ex': "Examples: 'TSLA', 'AAPL'. For Canadian stocks try adding '.TO'",
-        'md_price': "Current Price:",
-        'md_btn_copy': "👉 Use this price in calculator",
-        'md_chain_head': "⛓️ Option Chain",
-        'md_exp': "Select Expiry:",
-        'md_type': "Option Type:",
-        'md_no_data': "No option data found or invalid ticker.",
-        'md_error': "Error fetching data. Check symbol.",
         'current_price': "Current Stock Price ($)",
         'strike': "Strike Price ($)",
         'premium': "Premium per Share ($)",
@@ -363,14 +355,25 @@ texts = {
         'risk_text_2': "to",
         'risk_text_3': "to chase a potential",
         'verdict_great': "✅ GREAT TRADE: Low risk for high reward.",
-        'verdict_bad': "🛑 BAD DEAL: Giving up too much yield."
+        'verdict_bad': "🛑 BAD DEAL: Giving up too much yield.",
+        'md_header': "📡 Market Data & Option Chain",
+        'md_input_lbl': "Enter Ticker (Yahoo Finance Symbol):",
+        'md_note': "ℹ️ Note: Data is delayed by ~15 mins.",
+        'md_note_ex': "Examples: 'TSLA', 'AAPL'. For Canadian stocks try adding '.TO'",
+        'md_price': "Current Price:",
+        'md_btn_copy': "👉 Use this price in calculator",
+        'md_chain_head': "⛓️ Option Chain",
+        'md_exp': "Select Expiry:",
+        'md_type': "Option Type:",
+        'md_no_data': "No option data found or invalid ticker.",
+        'md_error': "Error fetching data. Check symbol."
     }
 }
 
 t = texts[st.session_state.language]
 today = date.today()
 
-# ГЛАВНО МЕНЮ (РАДИО БУТОНИ)
+# --- ГЛАВНО МЕНЮ (РАДИО) ---
 selected_section = st.radio(
     t['choose_strat'],
     [t['tab_put'], t['tab_call'], t['tab_roll'], t['tab_data']],
@@ -378,17 +381,58 @@ selected_section = st.radio(
     horizontal=True,
     label_visibility="collapsed"
 )
+
+# --- 8. ГЛОБАЛЕН TICKER INPUT (НОВО) ---
+# Инициализация на Session State за цената
+if 'global_fetched_price' not in st.session_state:
+    st.session_state.global_fetched_price = 0.0
+if 'last_ticker' not in st.session_state:
+    st.session_state.last_ticker = ""
+
+# Визуална кутия за търсене
+st.markdown('<div class="ticker-input-container">', unsafe_allow_html=True)
+c_search, c_display = st.columns([1, 1])
+
+with c_search:
+    global_ticker = st.text_input(t['global_ticker_label'], key="master_ticker_input", placeholder="e.g. NVDA").upper()
+
+with c_display:
+    if global_ticker:
+        # Проверяваме дали е нов тикер, за да изтеглим цената
+        if global_ticker != st.session_state.last_ticker:
+            try:
+                with st.spinner("⏳"):
+                    live_data = yf.Ticker(global_ticker).fast_info
+                    current_price = live_data.last_price
+                    st.session_state.global_fetched_price = current_price
+                    st.session_state.last_ticker = global_ticker
+            except:
+                st.warning("Ticker not found")
+        
+        # Показваме цената, ако я имаме
+        if st.session_state.global_fetched_price > 0:
+            st.markdown(f"<h3 style='margin:0; color:#38bdf8;'>${st.session_state.global_fetched_price:,.2f}</h3>", unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
+
 st.write("---")
 
-val_price = st.session_state.fetched_price
-
-# --- SECTION 1: PUT ---
+# ==========================================
+# SECTION 1: SELLING PUT
+# ==========================================
 if selected_section == t['tab_put']:
     st.header(t['put_header'])
     col1, col2 = st.columns(2)
     with col1:
-        def_val = val_price if val_price else None
-        cp_input = st.number_input(t['current_price'], value=def_val, step=0.10, placeholder="0.00")
+        # Използваме глобалната цена като 'value', ако съществува.
+        # Streamlit позволява промяна на стойността, дори ако е зададена с value.
+        default_price = st.session_state.global_fetched_price if st.session_state.global_fetched_price > 0 else 0.0
+        
+        # ВАЖНО: Използваме 'value' аргумента. Ако потребителят промени числото, Streamlit го запомня в key.
+        # За да се обнови при нов тикер, използваме key, който зависи от тикера, или просто разчитаме на rerender
+        # Най-добрият начин за "default but modifiable" в Streamlit е да се подаде value само при първоначално зареждане или промяна
+        
+        cp_input = st.number_input(t['current_price'], value=default_price, step=0.10, placeholder="0.00", key="put_price_input")
         strike_input = st.number_input(t['strike'], value=None, step=0.5, placeholder="0.00")
         current_price = cp_input if cp_input is not None else 0.0
         strike = strike_input if strike_input is not None else 0.0
@@ -428,12 +472,17 @@ if selected_section == t['tab_put']:
              st.caption(f"🛡️ {t['safety_msg']}")
         st.info(f"💰 {t['collateral']}: **${collateral:,.0f}**")
 
-# --- SECTION 2: CALL ---
+# ==========================================
+# SECTION 2: SELLING CALL
+# ==========================================
 elif selected_section == t['tab_call']:
     st.header(t['call_header'])
     col1, col2 = st.columns(2)
     with col1:
-        cb_input = st.number_input(t['cost_basis'], value=None, step=0.10, help="Вашата средна цена", placeholder="0.00")
+        # Тук също използваме глобалната цена за 'Cost Basis', ако потребителят иска да анализира нова позиция
+        default_cost = st.session_state.global_fetched_price if st.session_state.global_fetched_price > 0 else 0.0
+        
+        cb_input = st.number_input(t['cost_basis'], value=default_cost, step=0.10, help="Вашата средна цена", placeholder="0.00", key="call_cost_input")
         strike_call_input = st.number_input(t['strike'], value=None, step=0.5, key="call_strike", placeholder="0.00")
         cost_basis = cb_input if cb_input is not None else 0.0
         strike_call = strike_call_input if strike_call_input is not None else 0.0
@@ -470,7 +519,9 @@ elif selected_section == t['tab_call']:
         if cap_gains_per_share < 0:
             st.error(f"⚠️ Внимание: Страйкът (${strike_call}) е под вашата цена на купуване (${cost_basis}).")
 
-# --- SECTION 3: ROLL ---
+# ==========================================
+# SECTION 3: ROLLING
+# ==========================================
 elif selected_section == t['tab_roll']:
     st.header(t['roll_header'])
     
@@ -581,13 +632,16 @@ elif selected_section == t['tab_roll']:
         else:
              st.info("⚠️ Сделката е неутрална/приемлива.")
 
-# --- SECTION 4: MARKET DATA ---
+# ==========================================
+# SECTION 4: MARKET DATA (LEGACY TAB)
+# ==========================================
 elif selected_section == t['tab_data']:
     st.header(t['md_header'])
     
     st.info(f"{t['md_note']}\n\n{t['md_note_ex']}")
     
-    ticker_symbol = st.text_input(t['md_input_lbl'], value="").upper()
+    # Тъй като вече имаме глобален инпут, тук може да оставим локален за детайлни данни
+    ticker_symbol = st.text_input(t['md_input_lbl'], value=st.session_state.last_ticker).upper()
     
     if ticker_symbol:
         try:
@@ -597,10 +651,6 @@ elif selected_section == t['tab_data']:
             
             if current_live_price:
                 st.metric(t['md_price'], f"${current_live_price:.2f}")
-                
-                if st.button(t['md_btn_copy']):
-                    st.session_state.fetched_price = current_live_price
-                    st.success("Цената е запазена! Отидете в таб 1 или 2, за да я видите.")
                 
                 st.divider()
                 st.subheader(t['md_chain_head'])
@@ -621,10 +671,8 @@ elif selected_section == t['tab_data']:
                         st.dataframe(df_show, hide_index=True, use_container_width=True)
                 else:
                     st.warning(t['md_no_data'])
-                    
             else:
                 st.warning(f"Не мога да намеря цена за: {ticker_symbol}. Проверете дали тикерът е правилен в Yahoo Finance.")
-                
         except Exception as e:
             st.error(f"{t['md_error']} ({e})")
 
